@@ -2,10 +2,10 @@
   <div @click="handleClose" v-if="!isClose"
     class=" w-screen  h-screen md:inset-0  fixed left-0 top-0 flex items-center justify-center z-20">
     <div @click.stop=""
-      class="search-container p-6 flex justify-center flex-col gap-2 w-[90%] h-[80%] min-w-[20rem]  bg-gray-800 rounded-xl z-20">
+      class="search-container p-6 flex justify-center flex-col gap-2 w-[90%] h-[80%] min-w-[20rem]  bg-gray-800/70 shadow-[10px_10px_10px_rgba(255,255,255,0.5)] rounded-xl z-20">
       <div class="w-full h-8 flex gap-3 justify-between">
         <div class="flex justify-center w-full">
-          <input v-model="inputValue" @change="handleInputChange" type="text" class="w-8/12 h-8" placeholder="video name">
+          <input v-model="inputValue" @change="handleInputChange" type="text" class="w-8/12 h-8 rounded-xl px-2" placeholder="video name">
         </div>
         <span @click="handleClose"
           class=" w-8 h-8 flex items-center justify-center hover:bg-slate-950  bg-slate-400 rounded-md cursor-pointer">X</span>
@@ -14,8 +14,7 @@
       <el-scrollbar max-heigh="400">
         <h1 v-if="!result[0]" class="text-white mt-4">no results</h1>
         <div v-for="(item, index) in result" :key="index" @click="loadVideoFromSearchCard(item)" class="flex place-items-start gap-3 h-10 overflow-ellipsis overflow-y-hidden overflow-x-hidden p-2 items-center
-                     bg-black  w-full cursor-pointer border border-white
-                       text-white">
+                     bg-black  w-full cursor-pointer border border-white hover:bg-green-500/30 text-white">
           <img :src="item.snippet.thumbnails.medium.url" class=" w-8 h-8 rounded-md">
           {{ item.snippet.position + " " + item.snippet.title }}
         </div>
