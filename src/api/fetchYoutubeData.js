@@ -11,7 +11,6 @@ export const fetchPlayListName = (url, params) => {
 
 export const deleteListItem = (url, id) => {
   const userStore = useUserStore()
-  console.log(userStore.oauthToken)
   return request.delete(`${url}?id=${id}&key=${API_KEY}`, {
     headers: {
       Authorization: `Bearer ${userStore.oauthToken}`,

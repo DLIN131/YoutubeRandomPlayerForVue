@@ -24,7 +24,6 @@ const handleGoogleAccessTokenLogin = async () => {
   const res = await googleTokenLogin({
     clientId: GOOGLE_CLIENT_ID
   })
-  console.log(res)
   const token = res.access_token
 
   const success = await userStore.getUserInfo(token)

@@ -145,13 +145,11 @@ const fetchData = async () => {
   if (match) {
     listId.value = match[1]
   }
-  // console.log(listId.value);
   isLoading.value = true
   await useYoutubeData.getSnippetData(listId.value)
   await useYoutubeData.getListName(listId.value)
 
   useYoutubeData.latestIndex = 0
-  // console.log(useYoutubeData.snippetData);
 
   isLoading.value = false
 }
@@ -175,13 +173,11 @@ const handleUserCommand = async (command) => {
     const listname = useYoutubeData.currentListName
     const playlist = useYoutubeData.snippetData
     const chunkSize = Math.ceil(playlist.length / 20)
-    console.log(chunkSize)
     isUploading.value = true
     for (let i = 0; i < playlist.length; i += chunkSize) {
       const chunk = playlist.slice(i, i + chunkSize)
       const formData = new FormData()
       formData.append('dataChunk', JSON.stringify(chunk))
-      console.log(formData.getAll('dataChunk'))
       const res = await playlistStore.postPlaylist(listname, formData.getAll('dataChunk'), playlist.length)
       console.log(res)
     }

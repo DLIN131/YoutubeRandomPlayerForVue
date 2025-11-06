@@ -144,7 +144,6 @@ const loadVideo = async (item, index) => {
     next.value.prevItem = snippetData.value[index - 1]
     next.value.nextIndex = index + 1
     next.value.nextItem = snippetData.value[index + 1]
-    console.log(item)
   }
 }
 // 改變正在播放歌曲的背景
@@ -155,16 +154,24 @@ const changeIsPlayingItemBg = (newIndex) => {
 
 // 修正歌單位置
 const modifyListItemPos = (index) => {
-  if (index < 3) {
-    scrollRef.value.setScrollTop(0)
-    return
-  }
-  if (listItemsRef.value && listItemsRef.value[index]) {
-    console.log(listItemsRef.value[index])
-    const top = listItemsRef.value[index].getBoundingClientRect().height * (index - 4)
-    scrollRef.value.setScrollTop(top)
-    listItemsRef.value[index].getBoundingClientRect()
-  }
+  if (!listItemsRef.value || !listItemsRef.value[index] || !scrollRef.value) return
+
+  const item = listItemsRef.value[index]
+  const container = scrollRef.value.$el || scrollRef.value // 根據你的 scrollRef 可能要取 $el
+
+  // 項目距離 scroll 容器頂部的距離
+  const itemOffsetTop = item.offsetTop
+
+  // scroll 容器高度
+  const containerHeight = container.clientHeight
+
+  // 項目高度
+  const itemHeight = item.offsetHeight
+
+  // 設定 scrollTop 讓項目居中
+  const scrollTop = itemOffsetTop - containerHeight / 2 + itemHeight / 2
+
+  scrollRef.value.setScrollTop(scrollTop)
 }
 
 const showSearching = (state) => {
@@ -195,8 +202,6 @@ const changeToPrev = () => {
 
 // 獲取從youtubeplayer組件中emit過來的狀態
 const getPlayerState = (state) => {
-  console.log(state)
-  console.log(playerRef.value)
   volumeRange.value = state.target.getVolume()
   clearTimeout(timeOut)
   if (state.data === 0) {
@@ -235,7 +240,6 @@ const setVolume = async (volume) => {
 }
 
 const handleVolumeChange = (e) => {
-  console.log(e)
   playerRef.value.setVolume(volumeRange.value)
 }
 
@@ -265,7 +269,6 @@ const download = async (item, index) => {
     a.click()
     document.body.removeChild(a)
     isDownloading.value[index] = false
-    console.log(url)
   } catch (err) {
     console.log(err)
   }
@@ -315,7 +318,6 @@ const execute = async (listItemId) => {
 
 // 刪除清單影片
 const deleteVideo = async (id) => {
-  console.log(id)
   if (!accessToken.value) {
     authenticate()
   }
@@ -323,7 +325,6 @@ const deleteVideo = async (id) => {
   if (result === true) {
     // 刪除陣列中對應位置的資料
     const index = useYoutubeData.snippetData.findIndex((item) => item.id === id)
-    console.log(useYoutubeData.snippetData[index])
     useYoutubeData.snippetData.splice(index, 1)
     const index2 = snippetData.value.findIndex((item) => item.id === id)
     snippetData.value.splice(index2, 1)
@@ -342,7 +343,6 @@ const togglePlaylist = () => {
 const handleGlobalKeyDown = (e) => {
   // 避免方向鍵觸發滾動條
   // e.preventDefault();
-  // console.log(e.keyCode );
   // w
   if (e.keyCode === 87) {
     changeToPrev()
@@ -376,7 +376,6 @@ const handleGlobalKeyDown = (e) => {
   }
 }
 const listItems = (index) => (el) => {
-  // console.log(index);
   listItemsRef.value[index] = el
 }
 

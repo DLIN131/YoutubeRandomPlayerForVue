@@ -48,7 +48,6 @@ export const useUserStore = defineStore('user', () => {
   const authLogin = async () => {
     try {
       const res = await authUser(accessToken.value)
-      console.log(res)
       if (!res.data) {
         userInfo.value = {}
         accessToken.value = ''

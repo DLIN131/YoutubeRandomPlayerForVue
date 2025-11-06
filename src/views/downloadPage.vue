@@ -53,7 +53,6 @@ const download = async (item, index) => {
     a.click()
     document.body.removeChild(a)
     isDownloading.value[index] = false
-    console.log(url)
   } catch (err) {
     console.log(err)
   }

@@ -28,7 +28,6 @@ export const useYoutubeDataStore = defineStore('data', () => {
       // 如果nextpagetoken為undefined則不繼續抓取資料
       try {
         const res = await fetchYoutubeData('/playlistItems', params.value)
-        console.log(res.data)
         res.data.items.forEach(item => {
           if (item.snippet.title !== 'Deleted video' &&
             item.snippet.title !== 'Private video') {
@@ -94,7 +93,6 @@ export const useYoutubeDataStore = defineStore('data', () => {
   const deleteItem = async (id) => {
     try {
       const res = await deleteListItem('/playlistItems', id)
-      console.log(res)
       if (res) {
         snippetData.value.splice(snippetData.value.indexOf(id), 1)
       }
