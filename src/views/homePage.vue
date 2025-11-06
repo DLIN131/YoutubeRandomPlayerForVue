@@ -238,12 +238,9 @@ onMounted(async () => {
 
 .layout-container-demo .el-aside {
   color: var(--el-text-color-primary);
-  background: rgb(29, 28, 28);
+  background: rgb(253, 44, 44);
   /* margin-right: 1.25rem; */
-  border-right: 4px;
-  border-right-color: rgb(0, 0, 0);
   padding: 0.5rem;
-  background: url('../assets/img/bg04.jpg');
   background-size: cover;
   background-position-x: center;
 }
