@@ -51,7 +51,7 @@
 
     <div id="playlistScrollContainer"
       class="translate-x-[110%] transition-all md:translate-x-0 md:static absolute  right-1 top-0  w-fit overflow-x-hidden">
-      <el-scrollbar ref="scrollRef" class=" relative  md:flex flex-col" max-height="100vh" always native>
+      <el-scrollbar ref="scrollRef" class=" relative  md:flex flex-col" max-height="92vh" always native>
         <div v-if="!useYoutubeData.isLoaded" class=" text-white">[{{ useYoutubeData.snippetData.length }}]</div>
         <div v-for="(item, index) in snippetData" :key="index" @click="loadVideo(item, index)" :ref="listItems(index)"
           :class="[`flex place-items-start gap-3 h-32 overflow-ellipsis overflow-hidden  p-2 items-center relative
