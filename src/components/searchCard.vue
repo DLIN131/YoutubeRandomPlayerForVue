@@ -14,7 +14,7 @@
           <input v-model="inputValue" @change="handleInputChange" type="text" class="w-8/12 h-8 rounded-xl px-2" placeholder="video name">
         </div>
         <span @click="handleClose"
-          class=" w-8 h-8 flex items-center justify-center hover:bg-red-400/[.8]  bg-slate-400 rounded-md cursor-pointer">X</span>
+          class="cyberpunk-btn">X</span>
       </div>
 
       <el-scrollbar max-heigh="400">
@@ -90,5 +90,39 @@ const loadVideoFromSearchCard = (item) => {
   background-size: 200% 200%; /* 注意要比100%大，讓動畫平滑循環 */
   animation: border-move 6s linear infinite;
   filter: blur(4px);
+}
+
+.cyberpunk-btn {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #0ff 0%, #f0f 100%);
+  border: 2px solid #0ff;
+  border-radius: 8px;
+  color: #000;
+  font-weight: bold;
+  text-shadow: 0 0 8px #0ff, 0 0 12px #f0f;
+  box-shadow: 0 0 10px #0ff, 0 0 20px #f0f, inset 0 0 10px #0ff;
+  transition: all 0.25s ease-in-out;
+}
+
+.cyberpunk-btn:hover {
+  background: linear-gradient(135deg, #f0f 0%, #0ff 100%);
+  color: #fff;
+  border-color: #f0f;
+  box-shadow:
+    0 0 15px #f0f,
+    0 0 30px #0ff,
+    inset 0 0 15px #0ff;
+  transform: scale(1.1) rotate(-3deg);
+}
+
+.cyberpunk-btn:active {
+  transform: scale(0.95) rotate(1deg);
+  box-shadow: 0 0 5px #0ff, inset 0 0 10px #f0f;
 }
 </style>
