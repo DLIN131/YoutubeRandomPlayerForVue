@@ -3,9 +3,18 @@
   <el-container class="layout-container-demo" style="height: 100vh">
     <el-aside v-if="!notDisplaySideMenu" width="200px" class=" z-10">
       <el-scrollbar>
-        <button v-if="!notDisplaySideMenu" @click="toggleMenu"
-          class=" w-11 h-11  flex items-center justify-center mb-3 bg-black">
-          <el-icon>
+        <button
+          v-if="!notDisplaySideMenu"
+          @click="toggleMenu"
+          class="w-11 h-11 flex items-center justify-center mb-3
+                rounded-md
+                bg-black/20 backdrop-blur-sm
+                border border-gray-300/50
+                shadow-[0_0_8px_#ffffff33,inset_0_0_6px_#ffffff44]
+                hover:bg-black/30 hover:shadow-[0_0_12px_#ffffff55,inset_0_0_8px_#ffffff66]
+                transition-all duration-300"
+        >
+          <el-icon class="text-gray-200 drop-shadow-[0_0_2px_#ffffffaa]">
             <Fold />
           </el-icon>
         </button>
@@ -50,9 +59,18 @@
     <el-container>
       <el-header style="text-align: center; font-size: 16px"
         class=" shadow-lg shadow-black flex justify-between md:justify-center items-center">
-        <button v-if="notDisplaySideMenu" @click="toggleMenu"
-          class=" w-11 h-11 min-w-[2.75rem] rounded-md flex items-center justify-center bg-black ">
-          <el-icon>
+        <button
+          v-if="notDisplaySideMenu"
+          @click="toggleMenu"
+          class="w-11 h-11 min-w-[2.75rem] flex items-center justify-center
+                rounded-md
+                bg-black/20 backdrop-blur-sm
+                border border-gray-300/50
+                shadow-[0_0_8px_#ffffff33,inset_0_0_6px_#ffffff44]
+                hover:bg-black/30 hover:shadow-[0_0_12px_#ffffff55,inset_0_0_8px_#ffffff66]
+                transition-all duration-300"
+        >
+          <el-icon class="text-gray-200 drop-shadow-[0_0_2px_#ffffffaa]">
             <Expand />
           </el-icon>
         </button>
