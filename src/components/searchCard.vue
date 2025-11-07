@@ -11,18 +11,24 @@
       class="relative search-container p-6 flex justify-center flex-col gap-2 w-full h-full min-w-[20rem]  bg-black shadow-[10px_10px_10px_rgba(255,255,255,0.5)] rounded-xl z-20">
       <div class="w-full h-8 flex gap-3 justify-between">
         <div class="flex justify-center w-full">
-          <input v-model="inputValue" @change="handleInputChange" type="text" class="w-8/12 h-8 rounded-xl px-2" placeholder="video name">
+          <input v-model="inputValue" @change="handleInputChange" type="text" class="w-full h-10 rounded-xl px-3 text-cyan-300 bg-black/60 border border-pink-500/70
+             focus:border-fuchsia-400 outline-none
+             shadow-[0_0_10px_#ff00ff,inset_0_0_6px_#ff00ff]
+             focus:shadow-[0_0_10px_#ff00ff,0_0_30px_#ff66cc,inset_0_0_10px_#ff33cc]
+             transition-all duration-300 placeholder-cyan-700" placeholder="video name">
         </div>
         <span @click="handleClose"
           class="cyberpunk-btn">X</span>
       </div>
 
-      <el-scrollbar max-heigh="400">
-        <h1 v-if="!result[0]" class="text-white mt-4"></h1>
-        <div v-for="(item, index) in result" :key="index" @click="loadVideoFromSearchCard(item)" class="flex place-items-start gap-3 h-10 overflow-ellipsis overflow-y-hidden overflow-x-hidden p-2 items-center
-                     bg-black  w-full cursor-pointer border border-white hover:bg-green-500/30 text-white">
-          <img :src="item.snippet.thumbnails.medium.url" class=" w-8 h-8 rounded-md">
-          {{ item.snippet.position + " " + item.snippet.title }}
+      <el-scrollbar max-heigh="400" class="cyberpunk-scrollbar">
+        <h1 v-if="!result[0]" class="text-cyan-400 mt-4 text-center tracking-widest opacity-70"></h1>
+        <div v-for="(item, index) in result" :key="index" @click="loadVideoFromSearchCard(item)" class="cyberpunk-item">
+          <div class="neon-scan"></div>
+          <img :src="item.snippet.thumbnails.medium.url" class="thumb">
+          <div class="title-text">
+            {{ item.snippet.position + " " + item.snippet.title }}
+          </div>
         </div>
       </el-scrollbar>
       </div>
@@ -125,4 +131,117 @@ const loadVideoFromSearchCard = (item) => {
   transform: scale(0.95) rotate(1deg);
   box-shadow: 0 0 5px #0ff, inset 0 0 10px #f0f;
 }
+
+/* 捲軸本身霓虹風格 */
+.cyberpunk-scrollbar ::-webkit-scrollbar {
+  width: 8px;
+}
+.cyberpunk-scrollbar ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #0ff, #f0f);
+  border-radius: 8px;
+  box-shadow: 0 0 6px #0ff, 0 0 10px #f0f;
+}
+.cyberpunk-scrollbar ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+}
+
+/* 每個清單項目：半透明霓虹框 + 漸層邊 + hover 發光 */
+.cyberpunk-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin: 0.3rem 0;
+  cursor: pointer;
+  width: 99%;
+
+  background: rgba(10, 10, 20, 0.65);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-left: 4px solid #0ff;
+  border-radius: 8px;
+
+  color: #e0e0e0;
+  font-weight: 500;
+  text-shadow: 0 0 6px #0ff;
+
+  box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.15), 0 0 12px rgba(0, 255, 255, 0.25);
+  transition: all 0.25s ease-in-out;
+}
+
+.cyberpunk-item:hover {
+  border-color: #f0f;
+  border-left-color: #ff00ff;
+  background: rgba(30, 0, 40, 0.7);
+  color: #fff;
+  text-shadow: 0 0 10px #ff00ff, 0 0 20px #0ff;
+  transform: translateX(5px);
+}
+
+.cyberpunk-item:active {
+  transform: scale(0.98);
+}
+
+/* 縮圖區塊霓虹框 */
+.thumb {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 4px;
+  object-fit: cover;
+  box-shadow: 0 0 10px #0ff;
+  border: 1px solid #0ff;
+  transition: all 0.25s ease;
+}
+
+.cyberpunk-item:hover .thumb {
+  box-shadow: 0 0 15px #f0f, 0 0 25px #0ff;
+  border-color: #f0f;
+}
+
+/* 文字效果 */
+.title-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+/* ========= 流光掃描動畫 ========= */
+.neon-scan {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(0, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  transform: skewX(-25deg);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.cyberpunk-item:hover .neon-scan {
+  opacity: 1;
+  animation: neonSweep 1.2s ease-in-out;
+}
+
+@keyframes neonSweep {
+  0% {
+    left: -100%;
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    left: 150%;
+    opacity: 0;
+  }
+}
+
 </style>
