@@ -82,7 +82,7 @@
         </button>
         <div id="headerContainer"
           class="rounded-md absolute top-12 left-0 md:top-0 h-fit bg-slate-300/50 md:bg-transparent hidden overflow-hidden transition-all w-full md:h-full p-1 md:flex justify-center gap-3 items-center md:relative z-30">
-          <el-dropdown @command="handleCommand">
+          <el-dropdown @command="handleCommand" class="border border-gray-300/50">
             <span class="el-dropdown-link">
               <el-icon class="el-icon--left">
                 <List />
@@ -99,7 +99,7 @@
 
           <input v-model="listId" type="text" placeholder="listId"
             class="w-full h-12 md:w-8/12 md:h-full md:mt-0 mt-3 mr-1 rounded-md">
-          <span class="w-36 inline-flex items-center justify-center ">
+          <span class="w-36 inline-flex items-center justify-center border border-gray-300/50">
             <button @click="fetchData" class="mt-3 md:mt-0 bg-black">append</button>
             <img v-if="isLoading" class="w-7 h-7" src="../assets/img/hutoa01-unscreen.gif" alt="">
           </span>
@@ -244,10 +244,11 @@ onMounted(async () => {
 .layout-container-demo .el-header {
   position: relative;
   background-color: rgb(253, 44, 44);
+  background: none;
   color: black;
   outline-style: solid;
   outline-width: 2px;
-  outline-color: rgb(17, 15, 15);
+  outline-color: rgb(97, 97, 97);
 }
 
 .layout-container-demo .el-aside {
