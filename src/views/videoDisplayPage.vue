@@ -1,7 +1,7 @@
 <template>
   <div class=" md:flex md:justify-between relative p-2 ">
     <div class=" flex flex-col md:w-8/12 items-center">
-      <div class="player" ref="playerContainerRef">
+      <div class="player" ref="playerContainerRef" :style="{ opacity: playerOpacity }">
         <youtubePlayer v-if="isPrepare" :width="playerSize.width" :height="playerSize.height" :vid="videoId"
           :title="title" :id="id" ref="playerRef" @changeState="getPlayerState">
         </youtubePlayer>
@@ -10,9 +10,15 @@
       <div v-if="isPrepare" id="buttonArea" class=" bg-transparent/[.7]
                 shadow-inner  shadow-gray-600 w-full md:w-8/12 min-w-fit mt-10 flex flex-col
                 justify-center items-center rounded-xl p-5">
-        <div class="text-white">
-          音量
-          <input v-model="volumeRange" @change="handleVolumeChange" type="range" name="progress" min="0" max="100">
+        <div class="text-white flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span>音量</span>
+            <input v-model="volumeRange" @change="handleVolumeChange" type="range" name="volume" min="0" max="100" class="flex-1">
+          </div>
+          <div class="flex items-center justify-between">
+            <span>透明</span>
+            <input v-model="playerOpacity" type="range" min="0" max="1" step="0.01" class="flex-1">
+          </div>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
           <button @click="changeToPrev" class=""><el-icon>
@@ -129,6 +135,7 @@ const next = ref({
 const listItemsRef = ref([])
 const isSearching = ref(false)
 const accessToken = ref('') // youtube清單影片刪除用access token
+const playerOpacity = ref(0) // 預設完全不透明
 
 // methods
 // 載入歌曲
@@ -447,6 +454,7 @@ button {
 
 .player {
   /* display: none; */
+  transition: opacity 0.3s ease; /* 讓透明度切換時有平滑過渡感 */
 }
 
 .downloadBg {
@@ -463,5 +471,10 @@ button {
 
 button:hover {
   border-color: #646cff;
+}
+
+input[type="range"] {
+  cursor: pointer;
+  accent-color: #646cff; /* 讓滑條顏色跟你的按鈕 hover 色系一致 */
 }
 </style>
