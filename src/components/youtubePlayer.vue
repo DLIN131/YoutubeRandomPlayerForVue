@@ -22,10 +22,14 @@ const props = defineProps({
 
 const emit = defineEmits(['changeState', 'changeVolume'])
 
-onMounted(() => {
-  initPlayer()
-  loadPlayer()
-  addStateChange()
+onMounted(async () => {
+  try {
+    await initPlayer() // 等待初始化完成
+    await loadPlayer() // 等待影片載入
+    addStateChange() // 最後才綁定狀態監聽
+  } catch (error) {
+    console.error('播放器啟動失敗:', error)
+  }
 })
 
 onBeforeUnmount(() => {
@@ -44,25 +48,38 @@ const getVideoId = () => {
 
 let player = null
 const initPlayer = () => {
-  try {
-    player = YouTubePlayer(`youtube-${props.id}`, {
-      host: 'https://www.youtube.com',
-      width: props.width,
-      height: props.height,
-      videoId: getVideoId(),
-      playsinline: 1,
-      rel: 0
-    })
-  } catch (error) {
-    console.log(error)
-  }
+  return new Promise((resolve, reject) => {
+    try {
+      player = YouTubePlayer(`youtube-${props.id}`, {
+        host: 'https://www.youtube.com',
+        width: props.width,
+        height: props.height,
+        videoId: getVideoId(),
+        playerVars: {
+          playsinline: 1,
+          rel: 0
+        }
+      })
+
+      // 監聽播放器準備好了沒
+      player.on('ready', () => {
+        console.log('Player Ready')
+        resolve()
+      })
+    } catch (error) {
+      reject(error)
+    }
+  })
 }
 
-const loadPlayer = () => {
+const loadPlayer = async () => {
+  if (!player) return
   try {
-    player.loadVideoById(getVideoId())
+    await player.mute()
+    await player.loadVideoById(getVideoId())
+    // await player.cueVideoById(getVideoId())
   } catch (error) {
-    console.log(error)
+    console.log('載入影片錯誤', error)
   }
 }
 

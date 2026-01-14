@@ -211,6 +211,7 @@ const changeToPrev = () => {
 const getPlayerState = (state) => {
   volumeRange.value = state.target.getVolume()
   clearTimeout(timeOut)
+  console.log(state.data)
   if (state.data === 0) {
     changeToNext()
   } else if (state.data === 1) {
