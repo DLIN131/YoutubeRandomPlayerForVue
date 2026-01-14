@@ -253,11 +253,12 @@ onMounted(async () => {
 
 .layout-container-demo .el-aside {
   color: var(--el-text-color-primary);
-  background: rgb(253, 44, 44);
+  background: rgb(0, 0, 0);
   /* margin-right: 1.25rem; */
   padding: 0.5rem;
   background-size: cover;
   background-position-x: center;
+  border-right: 1px solid rgb(97, 97, 97);
 }
 
 .el-menu-item {
