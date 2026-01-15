@@ -78,7 +78,7 @@ const loadPlayer = async () => {
     await player.mute()
     await player.loadVideoById(getVideoId())
     // 取消靜音
-    // await player.unMute()
+    await player.unMute()
     // await player.cueVideoById(getVideoId())
   } catch (error) {
     console.log('載入影片錯誤', error)
