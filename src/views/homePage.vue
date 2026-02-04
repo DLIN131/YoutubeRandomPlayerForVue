@@ -109,9 +109,9 @@
         </div>
         <div v-else class=" flex items-center justify-evenly w-24 min-w-[6rem]">
           <img width="30" :src="userStore.userInfo.avatar" alt="user" class=" rounded-full">
-          <span class=" min-w-fit">{{ userStore.userInfo.name }}</span>
+          <span class=" min-w-fit text-white">{{ userStore.userInfo.name }}</span>
           <el-dropdown trigger="click" @command="handleUserCommand">
-            <span class="pt-1 cursor-pointer text-black ">
+            <span class="pt-1 cursor-pointer text-white ">
               <el-icon>
                 <CaretBottom />
               </el-icon>
@@ -123,7 +123,7 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-          <el-icon v-if="isUploading" class="is-loading">
+          <el-icon v-if="isUploading" class="is-loading" style="color: white">
             <Loading />
           </el-icon>
         </div>
