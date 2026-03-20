@@ -29,12 +29,17 @@ export const useUserStore = defineStore('user', () => {
     accessToken.value = token
   }
 
+  const setOauthToken = (token) => {
+    oauthToken.value = token
+  }
+
   const getUserInfo = async (token) => {
     try {
       const res = await googleLogin(token)
       if (!res) return false
       userInfo.value = res.data.user
       setToken(res.data.token)
+      setOauthToken(token)
       return true
     } catch (err) {
       console.log('====================================')
@@ -64,6 +69,7 @@ export const useUserStore = defineStore('user', () => {
     oauthToken,
     authLogin,
     setToken,
+    setOauthToken,
     getUserInfo
   }
 }, {
@@ -72,7 +78,7 @@ export const useUserStore = defineStore('user', () => {
     strategies: [
       {
         storage: localStorage,
-        paths: ['accessToken']
+        paths: ['accessToken', 'oauthToken']
       }
       // { Storage: localStorage, paths: ['userInfo'] }
     ]

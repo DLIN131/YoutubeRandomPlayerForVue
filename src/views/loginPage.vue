@@ -22,7 +22,9 @@ const GOOGLE_CLIENT_ID = '959560237311-13dbj26mjffjcph7r49pq3c57lbvpgrr.apps.goo
 // methods
 const handleGoogleAccessTokenLogin = async () => {
   const res = await googleTokenLogin({
-    clientId: GOOGLE_CLIENT_ID
+    clientId: GOOGLE_CLIENT_ID,
+    scope: 'profile email https://www.googleapis.com/auth/youtube.readonly',
+    prompt: 'consent'
   })
   const token = res.access_token
 

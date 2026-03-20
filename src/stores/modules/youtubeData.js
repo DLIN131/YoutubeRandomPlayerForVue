@@ -1,5 +1,10 @@
 import { defineStore } from 'pinia'
-import { fetchYoutubeData, fetchPlayListName, deleteListItem } from '../../api/fetchYoutubeData'
+import {
+  fetchYoutubeData,
+  fetchPlayListName,
+  deleteListItem,
+  fetchMyPlaylists
+} from '../../api/fetchYoutubeData'
 import { ref } from 'vue'
 import { API_KEY } from '../../utils/apiKey'
 // user module token and setToken removeToken
@@ -11,6 +16,7 @@ export const useYoutubeDataStore = defineStore('data', () => {
   const latestIndex = ref(0)
   const isLoaded = ref(true)
   const currentListName = ref('')
+  const myPlaylistData = ref([])
 
   // methods
   const getSnippetData = async (id) => {
@@ -100,13 +106,42 @@ export const useYoutubeDataStore = defineStore('data', () => {
       console.log('delete item error')
     }
   }
+
+  const getMyPlaylistData = async (oauthToken) => {
+    if (!oauthToken) {
+      myPlaylistData.value = []
+      return
+    }
+    const playlistBuffer = []
+    let pageToken = ''
+    do {
+      try {
+        const res = await fetchMyPlaylists(oauthToken, pageToken)
+        res.data.items.forEach((item) => {
+          if (item.status?.privacyStatus !== 'public') return
+          playlistBuffer.push({
+            name: item.snippet.title,
+            value: item.id
+          })
+        })
+        pageToken = res.data.nextPageToken
+      } catch (error) {
+        console.log('fetch my youtube playlists failed', error)
+        myPlaylistData.value = []
+        return
+      }
+    } while (pageToken !== undefined)
+    myPlaylistData.value = playlistBuffer
+  }
   // return
   return {
     currentListName,
     listNameData,
+    myPlaylistData,
     getListName,
     snippetData,
     getSnippetData,
+    getMyPlaylistData,
     latestIndex,
     isLoaded,
     getCompleteData,

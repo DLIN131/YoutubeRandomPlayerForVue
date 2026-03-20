@@ -18,15 +18,15 @@
             <Fold />
           </el-icon>
         </button>
-        <el-menu router>
-          <el-menu-item index="/player" class="el-menu-item">
+        <el-menu router class="side-menu">
+          <el-menu-item index="/player" class="side-list-item">
             <template #title>
               <el-icon>
                 <House></House>
               </el-icon> home
             </template>
           </el-menu-item>
-          <el-menu-item index="/downLoad">
+          <el-menu-item index="/downLoad" class="side-list-item">
             <template #title>
               <el-icon>
                 <Download></Download>
@@ -34,23 +34,56 @@
             </template>
           </el-menu-item>
         </el-menu>
-        <el-menu>
-          <el-sub-menu index="1">
+        <el-menu class="side-menu">
+          <el-sub-menu index="1" popper-class="neon-submenu-pop">
             <template #title>
-              <el-icon>
-                <List />
-              </el-icon>
-              <span>playlist</span>
+              <div class="submenu-title">
+                <el-icon>
+                  <List />
+                </el-icon>
+                <span>Saved</span>
+              </div>
               <el-icon v-if="isfetch" class="is-loading">
                 <Loading />
               </el-icon>
             </template>
-            <el-menu-item class="list-item" v-for="(item, index) in playlistStore.listnames" :key="index"
+            <el-menu-item class="side-list-item list-item" v-for="(item, index) in playlistStore.listnames" :key="index"
               @click="handlefetchPlaylist(item)">
               <span @click.stop="handleDeleteList(item)"
-                class="absolute left-2 flex items-center justify-center w-5 h-5 rounded-full p-2  bg-slate-600 ">X</span>
+                class="delete-chip absolute left-2 flex items-center justify-center w-5 h-5 rounded-full p-2">X</span>
               {{ item }}
             </el-menu-item>
+          </el-sub-menu>
+        </el-menu>
+        <el-menu class="side-menu">
+          <el-sub-menu index="2" popper-class="neon-submenu-pop">
+            <template #title>
+              <div class="submenu-title">
+                <el-icon>
+                  <List />
+                </el-icon>
+                <span>My YT</span>
+              </div>
+              <el-icon v-if="isFetchingMyPlaylist" class="is-loading">
+                <Loading />
+              </el-icon>
+            </template>
+            <el-menu-item class="side-list-item" v-if="!userStore.oauthToken" @click="handleGoogleYoutubeLogin">
+              Connect
+            </el-menu-item>
+            <template v-else>
+              <el-menu-item class="side-list-item" @click="fetchMyYoutubePlaylists">
+                Refresh
+              </el-menu-item>
+              <el-menu-item
+                class="side-list-item"
+                v-for="(item, index) in useYoutubeData.myPlaylistData"
+                :key="`${item.value}-${index}`"
+                @click="handleSelectMyPlaylist(item.value)"
+              >
+                {{ item.name }}
+              </el-menu-item>
+            </template>
           </el-sub-menu>
         </el-menu>
       </el-scrollbar>
@@ -141,6 +174,7 @@
 import { ref, onMounted } from 'vue'
 import { House, Download, Expand, Fold, List, CaretBottom, Loading, MoreFilled } from '@element-plus/icons-vue'
 import { useYoutubeDataStore, useUserStore, usePlaylistStore } from '../stores'
+import { googleTokenLogin } from 'vue3-google-login'
 
 // variables
 const isLoading = ref(false) // 使用youtube api抓資料
@@ -152,6 +186,7 @@ const listNames = ref(useYoutubeData.listNameData) // array
 const userStore = useUserStore()
 const playlistStore = usePlaylistStore()
 const isUploading = ref(false)
+const isFetchingMyPlaylist = ref(false)
 // methods
 const fetchData = async () => {
   const pattern = /list=([a-zA-Z0-9_-]+)/
@@ -178,6 +213,7 @@ const handleCommand = (command) => {
 const handleUserCommand = async (command) => {
   if (command === 'logout') {
     userStore.accessToken = ''
+    userStore.oauthToken = ''
     userStore.userInfo = {
       userId: '',
       username: '',
@@ -204,6 +240,31 @@ const handleUserCommand = async (command) => {
   }
 }
 
+const fetchMyYoutubePlaylists = async () => {
+  if (!userStore.oauthToken) return
+  isFetchingMyPlaylist.value = true
+  await useYoutubeData.getMyPlaylistData(userStore.oauthToken)
+  isFetchingMyPlaylist.value = false
+}
+
+const handleGoogleYoutubeLogin = async () => {
+  try {
+    const res = await googleTokenLogin({
+      clientId: '959560237311-13dbj26mjffjcph7r49pq3c57lbvpgrr.apps.googleusercontent.com',
+      scope: 'profile email https://www.googleapis.com/auth/youtube.readonly',
+      prompt: 'consent'
+    })
+    userStore.setOauthToken(res.access_token)
+    await fetchMyYoutubePlaylists()
+  } catch (error) {
+    console.log('google oauth for youtube playlists failed', error)
+  }
+}
+
+const handleSelectMyPlaylist = (selectedListId) => {
+  listId.value = selectedListId
+}
+
 const handlefetchPlaylist = async (listname) => {
   isfetch.value = true
   await playlistStore.fetchPlaylist(listname)
@@ -228,6 +289,9 @@ onMounted(async () => {
   await userStore.authLogin()
   if (userStore.accessToken) {
     await playlistStore.fetchNames()
+  }
+  if (userStore.oauthToken) {
+    await fetchMyYoutubePlaylists()
   }
 })
 
@@ -261,22 +325,102 @@ onMounted(async () => {
   border-right: 1px solid rgb(97, 97, 97);
 }
 
-.el-menu-item {
-  border-bottom-width: 1px;
-  border-bottom-color: rgb(26, 23, 23);
+.side-menu {
+  background: linear-gradient(155deg, rgba(8, 20, 34, 0.9), rgba(4, 8, 20, 0.88));
+  border: 1px solid rgba(34, 211, 238, 0.38);
+  border-radius: 12px;
+  margin-bottom: 0.6rem;
+  padding: 0.25rem;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.2), inset 0 0 10px rgba(34, 211, 238, 0.08);
+}
+
+.submenu-title {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.side-list-item {
+  color: #05434e;
+  border-radius: 10px;
+  margin: 0.12rem 0;
+  min-height: 38px;
+  transition: all 0.22s ease;
+}
+
+:deep(.side-list-item.is-active),
+.side-list-item:hover {
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.52), rgba(6, 182, 212, 0.22));
+  color: #f0fdff;
+  text-shadow: 0 0 7px rgba(103, 232, 249, 0.45);
+}
+
+:deep(.side-menu .el-sub-menu__title) {
+  color: #e6f9ff;
+  border-radius: 10px;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(125, 211, 252, 0.16);
+}
+
+:deep(.side-menu .el-sub-menu__title:hover) {
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.38), rgba(2, 132, 199, 0.16));
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
 }
 
 .list-item {
-  color: aqua;
-  background-color: black;
+  color: #67e8f9;
+  background: rgba(2, 6, 23, 0.5);
   display: flex;
   position: relative;
+  padding-left: 2.1rem;
+  padding-right: 0.5rem;
 }
 
 .list-item:hover {
-  background-color: aliceblue;
-  color: black;
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.2), rgba(103, 232, 249, 0.08));
+  color: #ecfeff;
+}
 
+.delete-chip {
+  background: rgba(100, 116, 139, 0.75);
+  font-size: 11px;
+  border: 1px solid rgba(226, 232, 240, 0.35);
+  transition: all 0.2s ease;
+}
+
+.delete-chip:hover {
+  background: rgba(239, 68, 68, 0.9);
+}
+
+:deep(.neon-submenu-pop.el-popper),
+:deep(.neon-submenu-pop) {
+  border: 1px solid rgba(34, 211, 238, 0.5) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.35) !important;
+}
+
+:deep(.neon-submenu-pop .el-menu),
+:deep(.neon-submenu-pop .el-menu--popup),
+:deep(.neon-submenu-pop .el-menu--popup-container),
+:deep(.neon-submenu-pop ul) {
+  background: linear-gradient(160deg, rgba(5, 15, 30, 0.98), rgba(7, 22, 43, 0.98)) !important;
+}
+
+:deep(.neon-submenu-pop .el-menu-item) {
+  color: #d7f9ff !important;
+  min-width: 180px;
+  border-left: 2px solid transparent;
+  background: transparent !important;
+}
+
+:deep(.neon-submenu-pop .el-menu-item:hover),
+:deep(.neon-submenu-pop .el-menu-item:focus) {
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.38), rgba(8, 47, 73, 0.15)) !important;
+  color: #f0fdff !important;
+  border-left-color: rgba(103, 232, 249, 0.9);
 }
 
 .el-dropdown-link {
