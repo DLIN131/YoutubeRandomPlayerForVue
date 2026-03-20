@@ -91,7 +91,7 @@
 <script setup>
 // import
 import { useYoutubeDataStore, usePlaylistStore } from '../stores'
-import { ref, onBeforeUnmount, onMounted, watch, onUnmounted } from 'vue'
+import { ref, onBeforeUnmount, onMounted, watch } from 'vue'
 import youtubePlayer from '../components/youtubePlayer.vue'
 import searchCard from '../components/searchCard.vue'
 import { downloadData } from '../api/downloadData'
@@ -126,6 +126,7 @@ const scrollRef = ref(null)
 const clickIndex = ref(-1)
 const isDownloading = ref([])
 let timeOut = null
+let cleanupScripts = null
 const next = ref({
   prevItem: Object,
   prevIndex: Number,
@@ -276,9 +277,11 @@ const download = async (item, index) => {
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
+    URL.revokeObjectURL(url)
     isDownloading.value[index] = false
   } catch (err) {
     console.log(err)
+    isDownloading.value[index] = false
   }
 }
 
@@ -415,14 +418,15 @@ onMounted(() => {
   snippetData.value = [...useYoutubeData.snippetData]
   loadVideo(snippetData.value[useYoutubeData.latestIndex], useYoutubeData.latestIndex)
 
-  const cleanup = loadScripts()
-  onUnmounted(() => {
-    cleanup()
-  })
+  cleanupScripts = loadScripts()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleGlobalKeyDown)
+  if (cleanupScripts) {
+    cleanupScripts()
+    cleanupScripts = null
+  }
 })
 
 watch(

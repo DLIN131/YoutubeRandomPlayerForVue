@@ -148,5 +148,13 @@ export const useYoutubeDataStore = defineStore('data', () => {
     deleteItem
   }
 }, {
-  persist: true
+  persist: {
+    enabled: true,
+    strategies: [
+      {
+        storage: localStorage,
+        paths: ['listNameData', 'latestIndex', 'currentListName']
+      }
+    ]
+  }
 })
