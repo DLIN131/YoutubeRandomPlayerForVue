@@ -255,6 +255,7 @@ const handleGoogleYoutubeLogin = async () => {
       prompt: 'consent'
     })
     userStore.setOauthToken(res.access_token)
+    await userStore.getUserInfo(res.access_token)
     await fetchMyYoutubePlaylists()
   } catch (error) {
     console.log('google oauth for youtube playlists failed', error)

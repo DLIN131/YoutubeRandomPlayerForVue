@@ -100,10 +100,16 @@ export const useYoutubeDataStore = defineStore('data', () => {
     try {
       const res = await deleteListItem('/playlistItems', id)
       if (res) {
-        snippetData.value.splice(snippetData.value.indexOf(id), 1)
+        const removeIndex = snippetData.value.findIndex((item) => item.id === id)
+        if (removeIndex !== -1) {
+          snippetData.value.splice(removeIndex, 1)
+        }
+        return true
       }
+      return false
     } catch (error) {
       console.log('delete item error')
+      return false
     }
   }
 
