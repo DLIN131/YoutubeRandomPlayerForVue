@@ -1,7 +1,7 @@
 <template>
   <transition name="modal-fade">
     <div v-if="!isClose" class="fixed inset-0 flex items-center justify-center z-[100] p-4 bg-black/60 backdrop-blur-md" @click="handleClose">
-      <div 
+      <div
         class="glass-panel w-full max-w-2xl max-h-[80vh] rounded-3xl overflow-hidden flex flex-col shadow-2xl relative"
         @click.stop
       >
@@ -9,15 +9,15 @@
         <div class="p-6 border-b border-white/5 flex items-center justify-between gap-4">
           <div class="relative flex-1 group flex items-center">
             <el-icon class="absolute left-4 text-gray-500 text-lg group-focus-within:text-indigo-400 transition-colors z-10"><Search /></el-icon>
-            <input 
-              v-model="inputValue" 
-              @input="handleInputChange" 
-              type="text" 
+            <input
+              v-model="inputValue"
+              @input="handleInputChange"
+              type="text"
               class="w-full h-11 bg-white/5 border border-white/10 rounded-xl px-4 pl-11 text-sm focus:border-indigo-500/50 focus:bg-white/10 outline-none transition-all"
               placeholder="Search tracks in this playlist..."
             >
           </div>
-          <button 
+          <button
             @click="handleClose"
             class="w-11 h-11 flex items-center justify-center rounded-xl bg-white/5 hover:bg-red-500/20 hover:text-red-400 transition-all border border-white/5"
           >
@@ -32,11 +32,11 @@
               <el-icon class="text-5xl opacity-20"><Search /></el-icon>
               <p class="text-sm font-medium">{{ inputValue ? 'No tracks found' : 'Type to search tracks' }}</p>
             </div>
-            
-            <div 
-              v-for="(item, index) in result" 
-              :key="index" 
-              @click="loadVideoFromSearchCard(item)" 
+
+            <div
+              v-for="(item, index) in result"
+              :key="index"
+              @click="loadVideoFromSearchCard(item)"
               class="group flex items-center gap-4 p-3 rounded-xl border border-transparent hover:border-indigo-500/30 hover:bg-white/5 transition-all cursor-pointer"
             >
               <div class="relative w-20 h-14 flex-shrink-0">

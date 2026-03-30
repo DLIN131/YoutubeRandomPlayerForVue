@@ -30,7 +30,7 @@
               #{{ item.snippet.position }}
             </div>
           </div>
-          
+
           <div class="flex flex-col gap-2 flex-1">
             <h3 class="text-sm font-semibold text-gray-200 line-clamp-2 leading-snug group-hover:text-indigo-300 transition-colors">
               {{ item.snippet.title }}
@@ -41,8 +41,8 @@
             @click.stop="download(item, index)"
             :class="[
               'w-full h-10 mt-auto flex items-center justify-center gap-2 rounded-xl text-sm font-bold transition-all',
-              isDownloading[index] 
-                ? 'bg-green-500 text-white cursor-wait' 
+              isDownloading[index]
+                ? 'bg-green-500 text-white cursor-wait'
                 : 'bg-white/5 text-gray-300 hover:bg-indigo-600 hover:text-white'
             ]"
             :disabled="isDownloading[index]"

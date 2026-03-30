@@ -13,7 +13,7 @@
       </div>
 
       <div class="w-full flex flex-col gap-4">
-        <button 
+        <button
           @click="handleGoogleAccessTokenLogin"
           class="w-full h-12 flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-semibold rounded-xl transition-all shadow-lg active:scale-95"
         >

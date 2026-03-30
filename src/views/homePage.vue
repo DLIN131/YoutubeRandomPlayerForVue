@@ -128,7 +128,7 @@
               </button>
             </div>
           </div>
-          
+
           <button @click="toggleHeaderContainer" class="md:hidden w-10 h-10 flex items-center justify-center rounded-lg bg-white/5">
             <el-icon><MoreFilled /></el-icon>
           </button>
@@ -216,7 +216,7 @@ const fetchData = async () => {
   const match = listId.value.match(pattern)
   if (!listId.value) return
   if (match) listId.value = match[1]
-  
+
   isLoading.value = true
   await useYoutubeData.getSnippetData(listId.value)
   await useYoutubeData.getListName(listId.value)

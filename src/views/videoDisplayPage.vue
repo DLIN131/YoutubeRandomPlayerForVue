@@ -61,14 +61,14 @@
           <button @click="changeToPrev" class="control-btn-secondary">
             <el-icon><ArrowLeftBold /></el-icon>
           </button>
-          
+
           <button v-if="isPlaying" @click="pauseVideo" class="control-btn-main">
             <el-icon><VideoPause /></el-icon>
           </button>
           <button v-else @click="playVideo" class="control-btn-main">
             <el-icon class="ml-1"><VideoPlay /></el-icon>
           </button>
-          
+
           <button @click="changeToNext" class="control-btn-secondary">
             <el-icon><ArrowRightBold /></el-icon>
           </button>
@@ -98,7 +98,7 @@
           <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest">Next Tracks</h3>
           <span class="text-xs bg-white/5 px-2 py-1 rounded text-gray-500">{{ snippetData.length }} Items</span>
         </div>
-        
+
         <el-scrollbar ref="scrollRef" class="flex-1 -mx-2 px-2" max-height="calc(100vh - 120px)">
           <div class="flex flex-col gap-2 pb-10">
             <div
@@ -108,8 +108,8 @@
               :ref="listItems(index)"
               :class="[
                 'group relative flex gap-3 p-2 rounded-xl border transition-all duration-300 cursor-pointer',
-                clickIndex === index 
-                  ? 'bg-indigo-500/10 border-indigo-500/30' 
+                clickIndex === index
+                  ? 'bg-indigo-500/10 border-indigo-500/30'
                   : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
               ]"
             >
@@ -119,7 +119,7 @@
                   <el-icon class="text-indigo-400 animate-spin-slow"><Loading /></el-icon>
                 </div>
               </div>
-              
+
               <div class="flex flex-col justify-center min-w-0 pr-12">
                 <p :class="['text-xs font-bold leading-tight line-clamp-2', clickIndex === index ? 'text-indigo-300' : 'text-gray-200']">
                   {{ item.snippet.title }}
