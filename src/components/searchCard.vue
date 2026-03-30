@@ -26,8 +26,8 @@
         </div>
 
         <!-- Body -->
-        <el-scrollbar class="flex-1">
-          <div class="p-4 flex flex-col gap-2">
+        <el-scrollbar height="400px" class="flex-1">
+          <div class="p-4 pr-6 flex flex-col gap-2">
             <div v-if="result.length === 0" class="py-12 flex flex-col items-center justify-center text-gray-500 gap-4">
               <el-icon class="text-5xl opacity-20"><Search /></el-icon>
               <p class="text-sm font-medium">{{ inputValue ? 'No tracks found' : 'Type to search tracks' }}</p>

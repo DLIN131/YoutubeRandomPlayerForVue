@@ -62,11 +62,20 @@
             <el-icon><ArrowLeftBold /></el-icon>
           </button>
 
-          <button v-if="isPlaying" @click="pauseVideo" class="control-btn-main">
-            <el-icon><VideoPause /></el-icon>
-          </button>
-          <button v-else @click="playVideo" class="control-btn-main">
-            <el-icon class="ml-1"><VideoPlay /></el-icon>
+          <button @click="isPlaying ? pauseVideo() : playVideo()" class="control-btn-main group">
+            <template v-if="isPlaying">
+              <!-- Custom Pause Icon -->
+              <svg class="w-8 h-8 transition-all duration-300 transform group-hover:scale-110" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16" rx="1" />
+                <rect x="14" y="4" width="4" height="16" rx="1" />
+              </svg>
+            </template>
+            <template v-else>
+              <!-- Custom Play Icon (Visually Centered) -->
+              <svg class="w-8 h-8 transition-all duration-300 transform group-hover:scale-110 translate-x-0.5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7 4.077a.5.5 0 0 1 .757-.429l11 6.5a.5.5 0 0 1 0 .858l-11 6.5a.5.5 0 0 1-.757-.429V4.077z" />
+              </svg>
+            </template>
           </button>
 
           <button @click="changeToNext" class="control-btn-secondary">
@@ -116,7 +125,9 @@
               <div class="relative w-24 h-16 flex-shrink-0">
                 <img :src="item.snippet.thumbnails.medium.url" class="w-full h-full object-cover rounded-lg shadow-lg">
                 <div v-if="clickIndex === index" class="absolute inset-0 bg-indigo-500/20 flex items-center justify-center rounded-lg">
-                  <el-icon class="text-indigo-400 animate-spin-slow"><Loading /></el-icon>
+                  <el-icon v-if="playerState === 3 || playerState === -1" class="text-indigo-400 animate-spin-slow"><Loading /></el-icon>
+                  <el-icon v-else-if="playerState === 1" class="text-indigo-400"><VideoPause /></el-icon>
+                  <el-icon v-else-if="playerState === 2" class="text-indigo-400"><VideoPlay /></el-icon>
                 </div>
               </div>
 
@@ -209,6 +220,7 @@ const next = ref({
 const listItemsRef = ref([])
 const isSearching = ref(false)
 const playerOpacity = ref(1)
+const playerState = ref(-1) // -1: unstarted, 1: playing, 2: paused, 3: buffering
 
 const loadVideo = async (item, index) => {
   if (!item) return
@@ -260,6 +272,7 @@ const changeToPrev = () => {
 }
 
 const getPlayerState = (state) => {
+  playerState.value = state.data
   volumeRange.value = state.target.getVolume()
   clearTimeout(timeOut)
   if (state.data === 0) {
