@@ -1,109 +1,164 @@
 <template>
-  <div class="md:flex md:justify-between relative p-2">
-    <div class="flex flex-col md:w-8/12 items-center">
-      <div class="player" ref="playerContainerRef" :style="{ opacity: playerOpacity }">
+  <div class="md:flex md:justify-between relative p-4 h-full gap-6">
+    <!-- Player Section -->
+    <div class="flex flex-col md:w-8/12 items-center flex-1">
+      <div class="player-container w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-black" ref="playerContainerRef" :style="{ opacity: playerOpacity }">
         <youtubePlayer
           v-if="isPrepare"
-          :width="playerSize.width"
-          :height="playerSize.height"
+          :width="'100%'"
+          :height="'100%'"
           :vid="videoId"
           :title="title"
           :id="id"
           ref="playerRef"
           @changeState="getPlayerState"
         />
-        <div v-else class="text-white">waiting fo video...</div>
+        <div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400 gap-4">
+          <el-icon class="text-6xl animate-pulse"><VideoPlay /></el-icon>
+          <span class="text-lg font-medium">Waiting for video...</span>
+        </div>
       </div>
+
+      <titleCard v-if="isPrepare" :title="title" />
 
       <div
         v-if="isPrepare"
-        id="buttonArea"
-        class="bg-transparent/[.7] shadow-inner shadow-gray-600 w-full md:w-8/12 min-w-fit mt-10 flex flex-col justify-center items-center rounded-xl p-5"
+        id="controlArea"
+        class="glass-card w-full mt-8 p-6 rounded-2xl flex flex-col items-center gap-6"
       >
-        <div class="text-white flex flex-col gap-2">
-          <div class="flex items-center justify-between">
-            <span>音量</span>
+        <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <span>Volume</span>
+              <span class="text-indigo-400">{{ volumeRange }}%</span>
+            </div>
             <input
               v-model="volumeRange"
               @change="handleVolumeChange"
               type="range"
-              name="volume"
               min="0"
               max="100"
-              class="flex-1"
+              class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-indigo-500"
             >
           </div>
-          <div class="flex items-center justify-between">
-            <span>透明度</span>
-            <input v-model="playerOpacity" type="range" min="0" max="1" step="0.01" class="flex-1">
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <span>Player Opacity</span>
+              <span class="text-indigo-400">{{ Math.round(playerOpacity * 100) }}%</span>
+            </div>
+            <input
+              v-model="playerOpacity"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              class="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+            >
           </div>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap">
-          <button @click="changeToPrev"><el-icon><ArrowLeftBold /></el-icon></button>
-          <button v-if="isPlaying" @click="pauseVideo" class="w-24 h-24 text-5xl rounded-full">
+        <div class="flex items-center gap-6">
+          <button @click="changeToPrev" class="control-btn-secondary">
+            <el-icon><ArrowLeftBold /></el-icon>
+          </button>
+          
+          <button v-if="isPlaying" @click="pauseVideo" class="control-btn-main">
             <el-icon><VideoPause /></el-icon>
           </button>
-          <button v-else @click="playVideo" class="w-24 h-24 text-5xl rounded-full">
-            <el-icon><VideoPlay /></el-icon>
+          <button v-else @click="playVideo" class="control-btn-main">
+            <el-icon class="ml-1"><VideoPlay /></el-icon>
           </button>
-          <button @click="changeToNext"><el-icon><ArrowRightBold /></el-icon></button>
+          
+          <button @click="changeToNext" class="control-btn-secondary">
+            <el-icon><ArrowRightBold /></el-icon>
+          </button>
         </div>
 
-        <div class="flex items-center mt-2 gap-2 flex-wrap">
-          <button @click="setRandomPlay" :disabled="!useYoutubeData.isLoaded">R</button>
-          <button @click="setOrderPlay"><el-icon><Sort class="rotate-90" /></el-icon></button>
-          <button @click="showSearching"><el-icon><Search /></el-icon></button>
+        <div class="flex items-center gap-4">
+          <button @click="setRandomPlay" :disabled="!useYoutubeData.isLoaded" class="action-btn" title="Shuffle">
+            <span class="text-sm font-bold">SHUFFLE</span>
+          </button>
+          <button @click="setOrderPlay" class="action-btn" title="Sequential">
+            <el-icon class="rotate-90"><Sort /></el-icon>
+          </button>
+          <button @click="showSearching(true)" class="action-btn" title="Search">
+            <el-icon><Search /></el-icon>
+          </button>
         </div>
       </div>
     </div>
 
-    <searchCard v-if="isSearching" @handleClose="showSearching(message)" @loadVideo="loadVideo" :dataArr="snippetData" />
-    <!-- 搜尋彈窗 -->
-
+    <!-- Playlist Section -->
     <div
       id="playlistScrollContainer"
-      class="translate-x-[110%] transition-all md:translate-x-0 md:static absolute right-1 top-0 w-fit overflow-x-hidden"
+      class="fixed inset-y-0 right-0 w-80 glass-panel md:static md:w-4/12 md:bg-transparent md:border-none translate-x-full md:translate-x-0 transition-transform duration-300 z-30"
     >
-      <el-scrollbar ref="scrollRef" class="relative md:flex flex-col" max-height="92vh" always native>
-        <div v-if="!useYoutubeData.isLoaded" class="text-white">[{{ useYoutubeData.snippetData.length }}]</div>
-        <div
-          v-for="(item, index) in snippetData"
-          :key="index"
-          @click="loadVideo(item, index)"
-          :ref="listItems(index)"
-          :class="[
-            `flex place-items-start gap-3 h-32 overflow-ellipsis overflow-hidden p-2 items-center relative
-             bg-black w-full min-w-[7rem] cursor-pointer border border-white bg-transparent/[.5] shadow-inner shadow-md shadow-white text-white`,
-            { colorBackground: clickIndex === index }
-          ]"
-        >
-          <img :src="item.snippet.thumbnails.medium.url" class="w-28 h-24 rounded-md shadow-2">
-          {{ item.snippet.position + ' ' + item.snippet.title }}
-          <span
-            :class="`flex justify-center items-center absolute w-7 h-7 right-12 bottom-5 rounded-full bg-red-100/[.5] hover:bg-blue-400/[.5]`"
-            @click.stop="deleteVideo(item.id)"
-          >
-            X
-          </span>
-          <span
-            :class="[
-              `flex justify-center items-center absolute w-7 h-7 right-3 bottom-5 rounded-full bg-red-400/[.5] hover:bg-black/[.5]`,
-              { downloadBg: isDownloading[index] }
-            ]"
-            @click.stop="download(item, index)"
-          >
-            <el-icon><Download /></el-icon>
-          </span>
+      <div class="p-4 h-full flex flex-col">
+        <div class="flex items-center justify-between mb-4 px-2">
+          <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest">Next Tracks</h3>
+          <span class="text-xs bg-white/5 px-2 py-1 rounded text-gray-500">{{ snippetData.length }} Items</span>
         </div>
-      </el-scrollbar>
+        
+        <el-scrollbar ref="scrollRef" class="flex-1 -mx-2 px-2" max-height="calc(100vh - 120px)">
+          <div class="flex flex-col gap-2 pb-10">
+            <div
+              v-for="(item, index) in snippetData"
+              :key="index"
+              @click="loadVideo(item, index)"
+              :ref="listItems(index)"
+              :class="[
+                'group relative flex gap-3 p-2 rounded-xl border transition-all duration-300 cursor-pointer',
+                clickIndex === index 
+                  ? 'bg-indigo-500/10 border-indigo-500/30' 
+                  : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
+              ]"
+            >
+              <div class="relative w-24 h-16 flex-shrink-0">
+                <img :src="item.snippet.thumbnails.medium.url" class="w-full h-full object-cover rounded-lg shadow-lg">
+                <div v-if="clickIndex === index" class="absolute inset-0 bg-indigo-500/20 flex items-center justify-center rounded-lg">
+                  <el-icon class="text-indigo-400 animate-spin-slow"><Loading /></el-icon>
+                </div>
+              </div>
+              
+              <div class="flex flex-col justify-center min-w-0 pr-12">
+                <p :class="['text-xs font-bold leading-tight line-clamp-2', clickIndex === index ? 'text-indigo-300' : 'text-gray-200']">
+                  {{ item.snippet.title }}
+                </p>
+                <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-tighter">Pos: {{ item.snippet.position }}</p>
+              </div>
+
+              <div class="absolute right-2 top-0 bottom-0 flex flex-col justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  @click.stop="deleteVideo(item.id)"
+                  class="w-7 h-7 flex items-center justify-center rounded-full bg-red-400/10 text-red-400 hover:bg-red-400 hover:text-white transition-all"
+                >
+                  <el-icon size="12"><Close /></el-icon>
+                </button>
+                <button
+                  @click.stop="download(item, index)"
+                  :class="[
+                    'w-7 h-7 flex items-center justify-center rounded-full transition-all',
+                    isDownloading[index] ? 'bg-green-500 text-white' : 'bg-indigo-400/10 text-indigo-400 hover:bg-indigo-400 hover:text-white'
+                  ]"
+                >
+                  <el-icon size="12" v-if="!isDownloading[index]"><Download /></el-icon>
+                  <el-icon size="12" v-else class="is-loading"><Loading /></el-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </el-scrollbar>
+      </div>
     </div>
 
+    <searchCard v-if="isSearching" @handleClose="showSearching(false)" @loadVideo="loadVideo" :dataArr="snippetData" />
+
+    <!-- Mobile Playlist Toggle -->
     <div
       @click="togglePlaylist"
-      class="md:hidden flex items-center absolute w-4 h-10 bg-slate-200/[.3] rounded-s-md border-2 text-black right-0 top-28 z-20 cursor-pointer"
+      class="md:hidden fixed right-0 top-1/2 -translate-y-1/2 w-8 h-16 glass-panel rounded-l-xl flex items-center justify-center z-40 cursor-pointer text-indigo-400"
     >
-      <el-icon id="toggleListBtn" class="transition-transform"><ArrowLeftBold /></el-icon>
+      <el-icon id="toggleListBtn" class="transition-transform duration-300"><ArrowLeftBold /></el-icon>
     </div>
   </div>
 </template>
@@ -113,6 +168,7 @@ import { useYoutubeDataStore, usePlaylistStore, useUserStore } from '../stores'
 import { ref, onBeforeUnmount, onMounted, watch } from 'vue'
 import youtubePlayer from '../components/youtubePlayer.vue'
 import searchCard from '../components/searchCard.vue'
+import titleCard from '../components/titleCard.vue'
 import { downloadData } from '../api/downloadData'
 import { googleTokenLogin } from 'vue3-google-login'
 import {
@@ -122,7 +178,9 @@ import {
   VideoPause,
   Search,
   Sort,
-  Download
+  Download,
+  Close,
+  Loading
 } from '@element-plus/icons-vue'
 
 const useYoutubeData = useYoutubeDataStore()
@@ -134,10 +192,6 @@ const volumeRange = ref(0)
 const title = ref('')
 const videoId = ref('')
 const id = ref(0)
-const playerSize = ref({
-  width: window.innerWidth > 600 ? 600 : window.innerWidth - 10,
-  height: window.innerWidth > 600 ? 400 : window.innerHeight / 2
-})
 const isPrepare = ref(false)
 const isPlaying = ref(false)
 const playerRef = ref(null)
@@ -147,14 +201,14 @@ const clickIndex = ref(-1)
 const isDownloading = ref([])
 let timeOut = null
 const next = ref({
-  prevItem: Object,
-  prevIndex: Number,
-  nextItem: Object,
-  nextIndex: Number
+  prevItem: null,
+  prevIndex: -1,
+  nextItem: null,
+  nextIndex: -1
 })
 const listItemsRef = ref([])
 const isSearching = ref(false)
-const playerOpacity = ref(0)
+const playerOpacity = ref(1)
 
 const loadVideo = async (item, index) => {
   if (!item) return
@@ -187,29 +241,22 @@ const modifyListItemPos = (index) => {
 }
 
 const showSearching = (state) => {
-  if (!state) {
-    isSearching.value = false
+  isSearching.value = state === true
+  if (!isSearching.value) {
     window.addEventListener('keydown', handleGlobalKeyDown)
-    return
+  } else {
+    window.removeEventListener('keydown', handleGlobalKeyDown)
   }
-  isSearching.value = true
-  window.removeEventListener('keydown', handleGlobalKeyDown)
 }
 
 const changeToNext = () => {
-  if (next.value.nextIndex > snippetData.value.length - 1) {
-    next.value.nextIndex = 0
-    next.value.nextItem = snippetData.value[0]
-  }
-  loadVideo(next.value.nextItem, next.value.nextIndex)
+  const nextIdx = next.value.nextIndex > snippetData.value.length - 1 ? 0 : next.value.nextIndex
+  loadVideo(snippetData.value[nextIdx], nextIdx)
 }
 
 const changeToPrev = () => {
-  if (next.value.prevIndex < 0) {
-    next.value.prevIndex = snippetData.value.length - 1
-    next.value.prevItem = snippetData.value[snippetData.value.length - 1]
-  }
-  loadVideo(next.value.prevItem, next.value.prevIndex)
+  const prevIdx = next.value.prevIndex < 0 ? snippetData.value.length - 1 : next.value.prevIndex
+  loadVideo(snippetData.value[prevIdx], prevIdx)
 }
 
 const getPlayerState = (state) => {
@@ -239,14 +286,16 @@ const playVideo = () => {
 }
 
 const seekTo = async (seconds) => {
+  if (!playerRef.value) return
   let currentTime = await playerRef.value.getCurrentTime()
   currentTime += seconds
   playerRef.value.seekTo(currentTime)
 }
 
 const setVolume = async (volume) => {
+  if (!playerRef.value) return
   let currentVolume = await playerRef.value.getVolume()
-  currentVolume += volume
+  currentVolume = Math.min(100, Math.max(0, currentVolume + volume))
   volumeRange.value = currentVolume
   playerRef.value.setVolume(currentVolume)
 }
@@ -256,10 +305,12 @@ const handleVolumeChange = () => {
 }
 
 const setRandomPlay = () => {
-  for (let i = snippetData.value.length - 1; i > 0; i--) {
+  const arr = [...snippetData.value]
+  for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[snippetData.value[i], snippetData.value[j]] = [snippetData.value[j], snippetData.value[i]]
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
   }
+  snippetData.value = arr
   loadVideo(snippetData.value[0], 0)
 }
 
@@ -306,6 +357,7 @@ const ensureOauthToken = async () => {
 }
 
 const deleteVideo = async (id) => {
+  if (!confirm('Delete this track from YouTube playlist?')) return
   const isAuthorized = await ensureOauthToken()
   if (!isAuthorized) return
 
@@ -319,7 +371,7 @@ const deleteVideo = async (id) => {
 const togglePlaylist = () => {
   const toggleBtn = document.getElementById('toggleListBtn')
   const scrollEle = document.getElementById('playlistScrollContainer')
-  scrollEle.classList.toggle('translate-x-[110%]')
+  scrollEle.classList.toggle('translate-x-full')
   toggleBtn.classList.toggle('rotate-180')
 }
 
@@ -359,7 +411,10 @@ const listItems = (index) => (el) => {
 onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeyDown)
   snippetData.value = [...useYoutubeData.snippetData]
-  loadVideo(snippetData.value[useYoutubeData.latestIndex], useYoutubeData.latestIndex)
+  const latestIdx = useYoutubeData.latestIndex || 0
+  if (snippetData.value.length > 0) {
+    loadVideo(snippetData.value[latestIdx], latestIdx)
+  }
 })
 
 onBeforeUnmount(() => {
@@ -388,38 +443,28 @@ watch(
 </script>
 
 <style scoped>
-.colorBackground {
-  background-color: rgba(0, 218, 247, 0.308);
-  border-left: 4px solid rgb(149, 149, 236);
+.control-btn-main {
+  @apply w-20 h-20 rounded-full bg-indigo-600 hover:bg-indigo-500 text-3xl flex items-center justify-center shadow-xl shadow-indigo-600/20 active:scale-90 transition-all;
 }
 
-button {
-  background: black;
-  box-shadow: 0px 3px 0px rgba(163, 26, 26, 1);
+.control-btn-secondary {
+  @apply w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 text-xl flex items-center justify-center border border-white/5 active:scale-95 transition-all;
 }
 
-.player {
-  transition: opacity 0.3s ease;
+.action-btn {
+  @apply px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/5 text-xs font-medium transition-all;
 }
 
-.downloadBg {
-  background-color: green;
+.animate-spin-slow {
+  animation: spin 3s linear infinite;
 }
 
-@media screen and (max-width: 768px) {
-  button {
-    width: 5rem;
-    height: 1.75rem;
-    font-size: 100%;
-  }
-}
-
-button:hover {
-  border-color: #646cff;
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 input[type='range'] {
-  cursor: pointer;
-  accent-color: #646cff;
+  @apply cursor-pointer accent-indigo-500;
 }
 </style>

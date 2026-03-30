@@ -1,70 +1,34 @@
 <template>
-  <div>
-    <div class="loader">
-      <div class="song">
-        <p class="name ">{{ title }}</p>
-        <p class="artist"></p>
-      </div>
+  <div class="w-full max-w-2xl mt-6 px-4">
+    <div class="glass-card p-4 rounded-xl flex flex-col items-center text-center gap-1 border-white/5">
+      <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-[0.2em] mb-1">Now Playing</p>
+      <h2 class="text-lg md:text-xl font-bold text-white line-clamp-1">
+        {{ title }}
+      </h2>
+      <div class="w-12 h-1 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full mt-2"></div>
     </div>
   </div>
 </template>
 
 <script setup>
 defineProps({
-  title: String
+  title: {
+    type: String,
+    default: 'No Media Playing'
+  }
 })
 </script>
 
 <style scoped>
-.loader {
-  display: flex;
-  flex-direction: row;
-  height: 4em;
-  padding-left: 1em;
-  padding-right: 1em;
-  transform: rotate(180deg);
-  justify-content: center;
-  border-radius: 10px;
-  transition: .4s ease-in-out;
-  background: linear-gradient(to bottom, rgba(255, 172, 172, .5) 10%, rgba(0, 0, 0, .5));
-  margin-top: 1rem;
-  max-width: 35rem;
-  min-width: 20rem;
+.glass-card {
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.5s ease-out;
 }
 
-.name {
-  color: white;
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
-.song {
-  position: relative;
-  transform: rotate(180deg);
-  margin-right: 1em;
-  color: black;
-  align-self: center;
-  overflow-x: hidden;
-}
-
-.artist {
-  font-size: 0.6em;
-}
-
-/*
-@keyframes move6 {
-  0% {
-    height: 0.2em;
-  }
-
-  25% {
-    height: 0.7em;
-  }
-
-  50% {
-    height: 1.5em;
-  }
-
-  100% {
-    height: 0.2em;
-  }
-} */
 </style>

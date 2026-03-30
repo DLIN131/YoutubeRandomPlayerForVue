@@ -1,22 +1,18 @@
 <template>
-  <div class="flex items-center flex-col">
-    <div class="youtube-video ">
-      <div :id="'youtube-' + id"></div>
-    </div>
-    <titleCard :title="title"></titleCard>
+  <div class="w-full h-full">
+    <div :id="'youtube-' + id" class="w-full h-full"></div>
   </div>
 </template>
 
 <script setup>
 import { watch, onMounted, onBeforeUnmount } from 'vue'
 import YouTubePlayer from 'youtube-player'
-import titleCard from './titleCard.vue'
 
 const props = defineProps({
   id: { type: Number, default: 0 },
   vid: { type: String, required: true, default: '' },
-  width: { type: Number, default: 0 },
-  height: { type: Number, default: 0 },
+  width: { type: [Number, String], default: '100%' },
+  height: { type: [Number, String], default: '100%' },
   title: { type: String, default: '' }
 })
 
