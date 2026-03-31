@@ -8,7 +8,7 @@
         <!-- Header -->
         <div class="p-6 border-b border-white/5 flex items-center justify-between gap-4">
           <div class="relative flex-1 group flex items-center">
-            <el-icon class="absolute left-4 text-gray-500 text-lg group-focus-within:text-indigo-400 transition-colors z-10"><Search /></el-icon>
+            <el-icon class="absolute left-6 text-gray-500 text-lg group-focus-within:text-indigo-400 transition-colors z-10"><Search /></el-icon>
             <input
               v-model="inputValue"
               @input="handleInputChange"

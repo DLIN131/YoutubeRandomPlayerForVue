@@ -124,11 +124,6 @@
             >
               <div class="relative w-24 h-16 flex-shrink-0">
                 <img :src="item.snippet.thumbnails.medium.url" class="w-full h-full object-cover rounded-lg shadow-lg">
-                <div v-if="clickIndex === index" class="absolute inset-0 bg-indigo-500/20 flex items-center justify-center rounded-lg">
-                  <el-icon v-if="playerState === 3 || playerState === -1" class="text-indigo-400 animate-spin-slow"><Loading /></el-icon>
-                  <el-icon v-else-if="playerState === 1" class="text-indigo-400"><VideoPause /></el-icon>
-                  <el-icon v-else-if="playerState === 2" class="text-indigo-400"><VideoPlay /></el-icon>
-                </div>
               </div>
 
               <div class="flex flex-col justify-center min-w-0 pr-12">
@@ -186,7 +181,6 @@ import {
   ArrowLeftBold,
   ArrowRightBold,
   VideoPlay,
-  VideoPause,
   Search,
   Sort,
   Download,
@@ -457,11 +451,35 @@ watch(
 
 <style scoped>
 .control-btn-main {
-  @apply w-20 h-20 rounded-full bg-indigo-600 hover:bg-indigo-500 text-3xl flex items-center justify-center shadow-xl shadow-indigo-600/20 active:scale-90 transition-all;
+  @apply w-20 h-20 rounded-full text-3xl flex items-center justify-center transition-all duration-200 border border-white/10;
+  background: linear-gradient(145deg, #6366f1, #4338ca);
+  box-shadow: 10px 10px 20px #01040a, -4px -4px 12px rgba(255, 255, 255, 0.05), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.control-btn-main:hover {
+  @apply brightness-110 shadow-indigo-500/20;
+  transform: translateY(-2px);
+}
+
+.control-btn-main:active {
+  transform: translateY(1px) scale(0.95);
+  box-shadow: inset 6px 6px 12px #01040a, inset -3px -3px 8px rgba(255, 255, 255, 0.1);
 }
 
 .control-btn-secondary {
-  @apply w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 text-xl flex items-center justify-center border border-white/5 active:scale-95 transition-all;
+  @apply w-12 h-12 rounded-full text-xl flex items-center justify-center transition-all duration-200 border-t border-white/10 border-b border-black/40;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  box-shadow: 4px 4px 8px #01040a, -2px -2px 6px rgba(255, 255, 255, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.control-btn-secondary:hover {
+  @apply bg-white/10;
+  transform: translateY(-1px);
+}
+
+.control-btn-secondary:active {
+  transform: translateY(1px) scale(0.95);
+  box-shadow: inset 3px 3px 6px #01040a, inset -1px -1px 3px rgba(255, 255, 255, 0.05);
 }
 
 .action-btn {
