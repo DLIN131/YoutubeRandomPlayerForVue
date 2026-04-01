@@ -103,12 +103,29 @@
       class="fixed inset-y-0 right-0 w-80 glass-panel md:static md:w-4/12 md:bg-transparent md:border-none translate-x-full md:translate-x-0 transition-transform duration-300 z-30"
     >
       <div class="p-4 h-full flex flex-col">
-        <div class="flex items-center justify-between mb-4 px-2">
-          <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest">Next Tracks</h3>
-          <span class="text-xs bg-white/5 px-2 py-1 rounded text-gray-500">{{ snippetData.length }} Items</span>
+        <div class="flex items-center gap-4 mb-6 px-2">
+          <button
+            @click="activeTab = 'queue'"
+            :class="[
+              'text-xs font-bold uppercase tracking-widest pb-2 border-b-2 transition-all',
+              activeTab === 'queue' ? 'text-indigo-400 border-indigo-400' : 'text-gray-500 border-transparent hover:text-gray-300'
+            ]"
+          >
+            Queue ({{ snippetData.length }})
+          </button>
+          <button
+            @click="activeTab = 'discovery'"
+            :class="[
+              'text-xs font-bold uppercase tracking-widest pb-2 border-b-2 transition-all',
+              activeTab === 'discovery' ? 'text-indigo-400 border-indigo-400' : 'text-gray-500 border-transparent hover:text-gray-300'
+            ]"
+          >
+            Discovery
+          </button>
         </div>
 
-        <el-scrollbar ref="scrollRef" class="flex-1 -mx-2 px-2" max-height="calc(100vh - 120px)">
+        <template v-if="activeTab === 'queue'">
+          <el-scrollbar ref="scrollRef" class="flex-1 -mx-2 px-2" max-height="calc(100vh - 120px)">
           <div class="flex flex-col gap-2 pb-10">
             <div
               v-for="(item, index) in snippetData"
@@ -154,6 +171,11 @@
             </div>
           </div>
         </el-scrollbar>
+        </template>
+
+        <template v-else>
+          <recommendationList :currentTitle="title" @loadVideo="loadVideo" />
+        </template>
       </div>
     </div>
 
@@ -175,6 +197,7 @@ import { ref, onBeforeUnmount, onMounted, watch } from 'vue'
 import youtubePlayer from '../components/youtubePlayer.vue'
 import searchCard from '../components/searchCard.vue'
 import titleCard from '../components/titleCard.vue'
+import recommendationList from '../components/recommendationList.vue'
 import { downloadData } from '../api/downloadData'
 import { googleTokenLogin } from 'vue3-google-login'
 import {
@@ -215,6 +238,7 @@ const listItemsRef = ref([])
 const isSearching = ref(false)
 const playerOpacity = ref(1)
 const playerState = ref(-1) // -1: unstarted, 1: playing, 2: paused, 3: buffering
+const activeTab = ref('queue')
 
 const loadVideo = async (item, index) => {
   if (!item) return
@@ -222,12 +246,20 @@ const loadVideo = async (item, index) => {
   title.value = item.snippet.title
   isPrepare.value = true
   videoId.value = item.snippet.resourceId.videoId
-  changeIsPlayingItemBg(index)
-  modifyListItemPos(index)
-  next.value.prevIndex = index - 1
-  next.value.prevItem = snippetData.value[index - 1]
-  next.value.nextIndex = index + 1
-  next.value.nextItem = snippetData.value[index + 1]
+
+  if (index !== -1) {
+    changeIsPlayingItemBg(index)
+    modifyListItemPos(index)
+    next.value.prevIndex = index - 1
+    next.value.prevItem = snippetData.value[index - 1]
+    next.value.nextIndex = index + 1
+    next.value.nextItem = snippetData.value[index + 1]
+  } else {
+    // Standalone playback from recommendations
+    clickIndex.value = -1 // Deselect from queue
+    // Leave next/prev as they are or reset them?
+    // Usually better to leave them so 'Next' still plays from the original queue if user wants.
+  }
 }
 
 const changeIsPlayingItemBg = (newIndex) => {

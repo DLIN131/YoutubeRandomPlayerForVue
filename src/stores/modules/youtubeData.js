@@ -3,7 +3,10 @@ import {
   fetchYoutubeData,
   fetchPlayListName,
   deleteListItem,
-  fetchMyPlaylists
+  fetchMyPlaylists,
+  searchYoutube,
+  insertListItem,
+  checkVideoInPlaylist
 } from '../../api/fetchYoutubeData'
 import { ref } from 'vue'
 import { API_KEY } from '../../utils/apiKey'
@@ -15,11 +18,14 @@ export const useYoutubeDataStore = defineStore('data', () => {
   const listNameData = ref([])
   const latestIndex = ref(0)
   const isLoaded = ref(true)
+  const currentPlaylistId = ref('')
   const currentListName = ref('')
   const myPlaylistData = ref([])
+  const recommendedVideos = ref([])
 
   // methods
   const getSnippetData = async (id) => {
+    currentPlaylistId.value = id
     const params = ref({
       part: 'contentDetails,id,snippet,status', // 必填，把需要的資訊列出來
       playlistId: id, // 播放清單的id
@@ -139,6 +145,84 @@ export const useYoutubeDataStore = defineStore('data', () => {
     } while (pageToken !== undefined)
     myPlaylistData.value = playlistBuffer
   }
+
+  const getRecommendations = async (title) => {
+    // Clean title: remove common suffixes like (Official Video), [MV], etc.
+    const cleanTitle = title
+      .replace(/\(Official.*?\)/gi, '')
+      .replace(/\[MV\]/gi, '')
+      .replace(/【.*?】/g, '')
+      .replace(/Official Video/gi, '')
+      .trim()
+
+    try {
+      const res = await searchYoutube(cleanTitle)
+      recommendedVideos.value = res.data.items.map((item) => ({
+        id: item.id.videoId,
+        snippet: {
+          title: item.snippet.title,
+          thumbnails: {
+            medium: {
+              url: item.snippet.thumbnails.medium.url
+            }
+          },
+          resourceId: {
+            videoId: item.id.videoId
+          }
+        }
+      }))
+    } catch (error) {
+      console.error('Fetch recommendations failed', error)
+      recommendedVideos.value = []
+    }
+  }
+
+  const addVideoToPlaylist = async (item, targetId) => {
+    const playlistId = targetId || currentPlaylistId.value
+    if (!playlistId) {
+      return false
+    }
+
+    try {
+      // ALWAYS perform cloud-side duplicate check
+      const checkRes = await checkVideoInPlaylist(playlistId, item.id)
+      if (checkRes.data && checkRes.data.items.length > 0) {
+        return 'exists'
+      }
+
+      const res = await insertListItem(playlistId, item.id)
+      const isCurrentPlaylist = playlistId === currentPlaylistId.value
+      if (res.data && isCurrentPlaylist) {
+        // Add to local state (Queue)
+        const newItem = {
+          id: res.data.id,
+          snippet: {
+            position: snippetData.value.length,
+            title: res.data.snippet.title,
+            thumbnails: {
+              medium: {
+                url: res.data.snippet.thumbnails.medium.url
+              }
+            },
+            resourceId: {
+              videoId: res.data.snippet.resourceId.videoId
+            }
+          }
+        }
+        snippetData.value.push(newItem)
+      }
+      return true
+    } catch (error) {
+      console.error('Add to playlist failed', error)
+      if (error.response?.status === 401) {
+        alert('請先點擊側邊欄 Connect Account 進行 Google 認證')
+      } else {
+        alert('加入清單失敗')
+      }
+      return false
+    }
+  }
+
   // return
   return {
     currentListName,
@@ -151,7 +235,11 @@ export const useYoutubeDataStore = defineStore('data', () => {
     latestIndex,
     isLoaded,
     getCompleteData,
-    deleteItem
+    deleteItem,
+    recommendedVideos,
+    getRecommendations,
+    currentPlaylistId,
+    addVideoToPlaylist
   }
 }, {
   persist: {
