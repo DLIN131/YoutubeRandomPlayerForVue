@@ -68,7 +68,7 @@
     >
       <div class="flex flex-col gap-3 py-2">
         <p class="text-xs text-gray-400 mb-2 uppercase tracking-widest font-bold">Your YouTube Playlists</p>
-        
+
         <el-scrollbar max-height="300px">
           <div class="flex flex-col gap-2 pr-2">
             <div
