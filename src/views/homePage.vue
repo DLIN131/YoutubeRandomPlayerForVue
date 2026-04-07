@@ -62,7 +62,7 @@
               </template>
               <el-menu-item v-if="!userStore.oauthToken" @click="handleGoogleYoutubeLogin" class="menu-item-modern">
                 <el-icon><Connection /></el-icon>
-                <span>Connect Account</span>
+                <span>Connect</span>
               </el-menu-item>
               <template v-else>
                 <el-menu-item @click="fetchMyYoutubePlaylists" class="menu-item-modern">
@@ -321,7 +321,7 @@ onMounted(async () => {
 }
 
 .menu-item-modern {
-  @apply h-11 mb-1 rounded-xl flex items-center gap-3 px-4 transition-all duration-200 !bg-transparent text-gray-400 hover:!bg-white/5 hover:text-white border border-transparent;
+  @apply h-11 mb-1 rounded-xl flex items-center gap-2 px-4 transition-all duration-200 !bg-transparent text-gray-400 hover:!bg-white/5 hover:text-green-400 border border-transparent;
 }
 
 :deep(.el-menu-item.is-active) {
