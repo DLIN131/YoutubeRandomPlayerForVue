@@ -33,6 +33,10 @@ export const useUserStore = defineStore('user', () => {
     oauthToken.value = token
   }
 
+  const clearOauthToken = () => {
+    oauthToken.value = ''
+  }
+
   const getUserInfo = async (token) => {
     try {
       const res = await googleLogin(token)
@@ -70,6 +74,7 @@ export const useUserStore = defineStore('user', () => {
     authLogin,
     setToken,
     setOauthToken,
+    clearOauthToken,
     getUserInfo
   }
 }, {

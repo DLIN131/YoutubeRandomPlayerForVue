@@ -259,7 +259,10 @@ const handleUserCommand = async (command) => {
 const fetchMyYoutubePlaylists = async () => {
   if (!userStore.oauthToken) return
   isFetchingMyPlaylist.value = true
-  await useYoutubeData.getMyPlaylistData(userStore.oauthToken)
+  const res = await useYoutubeData.getMyPlaylistData(userStore.oauthToken)
+  if (res === 401) {
+    userStore.clearOauthToken()
+  }
   isFetchingMyPlaylist.value = false
 }
 

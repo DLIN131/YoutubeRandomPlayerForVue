@@ -8,6 +8,7 @@ import {
   insertListItem,
   checkVideoInPlaylist
 } from '../../api/fetchYoutubeData'
+import { useUserStore } from './user'
 import { ref } from 'vue'
 import { API_KEY } from '../../utils/apiKey'
 // user module token and setToken removeToken
@@ -22,6 +23,7 @@ export const useYoutubeDataStore = defineStore('data', () => {
   const currentListName = ref('')
   const myPlaylistData = ref([])
   const recommendedVideos = ref([])
+  const userStore = useUserStore()
 
   // methods
   const getSnippetData = async (id) => {
@@ -140,6 +142,9 @@ export const useYoutubeDataStore = defineStore('data', () => {
       } catch (error) {
         console.log('fetch my youtube playlists failed', error)
         myPlaylistData.value = []
+        if (error.response?.status === 401) {
+          return 401
+        }
         return
       }
     } while (pageToken !== undefined)
@@ -215,7 +220,8 @@ export const useYoutubeDataStore = defineStore('data', () => {
     } catch (error) {
       console.error('Add to playlist failed', error)
       if (error.response?.status === 401) {
-        alert('請先點擊側邊欄 Connect Account 進行 Google 認證')
+        userStore.clearOauthToken()
+        alert('認證已過期，請重新點擊側邊欄 Connect Account')
       } else {
         alert('加入清單失敗')
       }
