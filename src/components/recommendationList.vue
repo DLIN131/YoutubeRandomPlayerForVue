@@ -17,21 +17,35 @@
     </div>
 
     <!-- Scrollable Content -->
-    <el-scrollbar class="flex-1 -mx-2 px-2">
-      <div v-if="recommendedVideos.length === 0" class="py-20 flex flex-col items-center justify-center text-gray-500 gap-4">
-        <el-icon class="text-5xl opacity-10"><Compass /></el-icon>
-        <p class="text-sm font-medium opacity-50">Click refresh to discovery music</p>
-      </div>
+    <virtualList
+      class="flex-1"
+      container-class="virtual-list flex-1 -mx-2 px-2"
+      max-height="calc(100vh - 180px)"
+      :items="recommendedVideos"
+      :item-height="96"
+      :item-key="getRecommendationKey"
+    >
+      <template #empty>
+        <div class="py-20 flex flex-col items-center justify-center text-gray-500 gap-4">
+          <el-icon class="text-5xl opacity-10"><Compass /></el-icon>
+          <p class="text-sm font-medium opacity-50">Click refresh to discovery music</p>
+        </div>
+      </template>
 
-      <div class="flex flex-col gap-2 pb-10">
+      <template #default="{ item }">
+        <div class="pb-2">
         <div
-          v-for="(item, index) in recommendedVideos"
-          :key="index"
           @click="$emit('loadVideo', item, -1)"
-          class="group relative flex gap-3 p-2 rounded-xl border bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10 transition-all duration-300 cursor-pointer"
+          class="group relative flex gap-3 p-2 rounded-xl border bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10 transition-all duration-300 cursor-pointer h-[88px]"
         >
           <div class="relative w-24 h-16 flex-shrink-0">
-            <img :src="item.snippet.thumbnails.medium.url" class="w-full h-full object-cover rounded-lg shadow-lg">
+            <img
+              :src="item.snippet.thumbnails.medium.url"
+              :alt="`Recommended video thumbnail: ${item.snippet.title}`"
+              loading="lazy"
+              decoding="async"
+              class="w-full h-full object-cover rounded-lg shadow-lg"
+            >
             <div class="absolute inset-0 bg-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
               <el-icon class="text-white text-xl"><VideoPlay /></el-icon>
             </div>
@@ -49,13 +63,14 @@
           <button
             @click.stop="handleAdd(item)"
             class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-white/5 text-gray-400 hover:bg-indigo-500 hover:text-white transition-all opacity-0 group-hover:opacity-100"
-            title="Add to Playlist"
+            :title="`Add ${item.snippet.title} to playlist`"
           >
             <el-icon><Plus /></el-icon>
           </button>
         </div>
-      </div>
-    </el-scrollbar>
+        </div>
+      </template>
+    </virtualList>
 
     <!-- Playlist Selection Dialog -->
     <el-dialog
@@ -119,6 +134,7 @@
 import { ref, reactive } from 'vue'
 import { useYoutubeDataStore, useUserStore } from '../stores'
 import { storeToRefs } from 'pinia'
+import virtualList from './virtualList.vue'
 import {
   Refresh, VideoPlay, Compass, Plus, ArrowRight,
   List, CircleCheck, Warning
@@ -154,6 +170,8 @@ const showToast = (message, type = 'success') => {
     toast.show = false
   }, 2000)
 }
+
+const getRecommendationKey = (item, index) => item?.id?.videoId ?? item?.etag ?? `${item?.snippet?.title ?? 'recommended'}-${index}`
 
 const handleRefresh = async () => {
   if (!props.currentTitle) return
@@ -234,5 +252,9 @@ const handleConfirmAdd = async (playlistId) => {
 
 :deep(.modern-dialog .el-dialog__footer) {
   @apply !px-8 !pb-6 !border-none;
+}
+
+.virtual-list {
+  scrollbar-gutter: stable;
 }
 </style>

@@ -26,32 +26,46 @@
         </div>
 
         <!-- Body -->
-        <el-scrollbar height="400px" class="flex-1">
-          <div class="p-4 pr-6 flex flex-col gap-2">
-            <div v-if="result.length === 0" class="py-12 flex flex-col items-center justify-center text-gray-500 gap-4">
+        <virtualList
+          container-class="search-result-list flex-1 p-4 pr-6"
+          max-height="400px"
+          :items="result"
+          :item-height="84"
+          :item-key="getSearchResultKey"
+        >
+          <template #empty>
+            <div class="py-12 flex flex-col items-center justify-center text-gray-500 gap-4">
               <el-icon class="text-5xl opacity-20"><Search /></el-icon>
               <p class="text-sm font-medium">{{ inputValue ? 'No tracks found' : 'Type to search tracks' }}</p>
             </div>
+          </template>
 
-            <div
-              v-for="(item, index) in result"
-              :key="index"
-              @click="loadVideoFromSearchCard(item)"
-              class="group flex items-center gap-4 p-3 rounded-xl border border-transparent hover:border-indigo-500/30 hover:bg-white/5 transition-all cursor-pointer"
-            >
-              <div class="relative w-20 h-14 flex-shrink-0">
-                <img :src="item.snippet.thumbnails.medium.url" class="w-full h-full object-cover rounded-lg shadow-md group-hover:scale-105 transition-transform">
+          <template #default="{ item }">
+            <div class="pb-2">
+              <div
+                @click="loadVideoFromSearchCard(item)"
+                class="group flex items-center gap-4 p-3 rounded-xl border border-transparent hover:border-indigo-500/30 hover:bg-white/5 transition-all cursor-pointer h-[76px]"
+              >
+                <div class="relative w-20 h-14 flex-shrink-0">
+                  <img
+                    :src="item.snippet.thumbnails.medium.url"
+                    :alt="`Search result thumbnail: ${item.snippet.title}`"
+                    loading="lazy"
+                    decoding="async"
+                    class="w-full h-full object-cover rounded-lg shadow-md group-hover:scale-105 transition-transform"
+                  >
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-gray-200 truncate group-hover:text-indigo-300 transition-colors">
+                    {{ item.snippet.title }}
+                  </p>
+                  <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">Position #{{ item.snippet.position }}</p>
+                </div>
+                <el-icon class="text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"><VideoPlay /></el-icon>
               </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-gray-200 truncate group-hover:text-indigo-300 transition-colors">
-                  {{ item.snippet.title }}
-                </p>
-                <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">Position #{{ item.snippet.position }}</p>
-              </div>
-              <el-icon class="text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"><VideoPlay /></el-icon>
             </div>
-          </div>
-        </el-scrollbar>
+          </template>
+        </virtualList>
 
         <!-- Footer -->
         <div class="p-4 border-t border-white/5 bg-white/5 flex justify-end">
@@ -67,6 +81,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { Search, Close, VideoPlay } from '@element-plus/icons-vue'
+import virtualList from './virtualList.vue'
 
 const props = defineProps({
   dataArr: {
@@ -103,6 +118,8 @@ const loadVideoFromSearchCard = (item) => {
   emit('loadVideo', item, index)
   handleClose()
 }
+
+const getSearchResultKey = (item, index) => item?.id ?? `${item?.snippet?.resourceId?.videoId ?? 'search'}-${index}`
 </script>
 
 <style scoped>
@@ -115,5 +132,9 @@ const loadVideoFromSearchCard = (item) => {
 .modal-fade-leave-to {
   opacity: 0;
   transform: scale(0.95);
+}
+
+.search-result-list {
+  scrollbar-gutter: stable;
 }
 </style>

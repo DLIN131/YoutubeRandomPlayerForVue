@@ -24,7 +24,13 @@
           class="group glass-card p-3 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-all duration-300 flex flex-col gap-3"
         >
           <div class="relative aspect-video rounded-xl overflow-hidden shadow-lg">
-            <img :src="item.snippet.thumbnails.medium.url" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+            <img
+              :src="item.snippet.thumbnails.medium.url"
+              :alt="`Download thumbnail: ${item.snippet.title}`"
+              loading="lazy"
+              decoding="async"
+              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            >
             <div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
             <div class="absolute top-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur-md rounded text-[10px] font-bold text-gray-300">
               #{{ item.snippet.position }}

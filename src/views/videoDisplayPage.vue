@@ -24,13 +24,13 @@
       <div
         v-if="isPrepare"
         id="controlArea"
-        class="glass-card w-full mt-8 p-6 rounded-2xl flex flex-col items-center gap-6"
+        class="glass-card-strong w-full max-w-3xl mt-8 p-6 rounded-2xl flex flex-col items-center gap-6"
       >
         <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-8">
           <div class="flex flex-col gap-2">
             <div class="flex items-center justify-between text-xs font-semibold text-gray-400 uppercase tracking-wider">
               <span>Volume</span>
-              <span class="text-indigo-400">{{ volumeRange }}%</span>
+              <span class="metric-value text-indigo-300">{{ volumeRange }}%</span>
             </div>
             <input
               v-model="volumeRange"
@@ -44,7 +44,7 @@
           <div class="flex flex-col gap-2">
             <div class="flex items-center justify-between text-xs font-semibold text-gray-400 uppercase tracking-wider">
               <span>Player Opacity</span>
-              <span class="text-indigo-400">{{ Math.round(playerOpacity * 100) }}%</span>
+              <span class="metric-value text-indigo-300">{{ Math.round(playerOpacity * 100) }}%</span>
             </div>
             <input
               v-model="playerOpacity"
@@ -125,52 +125,67 @@
         </div>
 
         <template v-if="activeTab === 'queue'">
-          <el-scrollbar ref="scrollRef" class="flex-1 -mx-2 px-2" max-height="calc(100vh - 120px)">
-          <div class="flex flex-col gap-2 pb-10">
-            <div
-              v-for="(item, index) in snippetData"
-              :key="index"
-              @click="loadVideo(item, index)"
-              :ref="listItems(index)"
-              :class="[
-                'group relative flex gap-3 p-2 rounded-xl border transition-all duration-300 cursor-pointer',
-                clickIndex === index
-                  ? 'bg-indigo-500/10 border-indigo-500/30'
-                  : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
-              ]"
-            >
-              <div class="relative w-24 h-16 flex-shrink-0">
-                <img :src="item.snippet.thumbnails.medium.url" class="w-full h-full object-cover rounded-lg shadow-lg">
-              </div>
-
-              <div class="flex flex-col justify-center min-w-0 pr-12">
-                <p :class="['text-xs font-bold leading-tight line-clamp-2', clickIndex === index ? 'text-indigo-300' : 'text-gray-200']">
-                  {{ item.snippet.title }}
-                </p>
-                <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-tighter">Pos: {{ item.snippet.position }}</p>
-              </div>
-
-              <div class="absolute right-2 top-0 bottom-0 flex flex-col justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  @click.stop="deleteVideo(item.id)"
-                  class="w-7 h-7 flex items-center justify-center rounded-full bg-red-400/10 text-red-400 hover:bg-red-400 hover:text-white transition-all"
-                >
-                  <el-icon size="12"><Close /></el-icon>
-                </button>
-                <button
-                  @click.stop="download(item, index)"
+          <virtualList
+            ref="scrollRef"
+            class="flex-1"
+            container-class="virtual-list flex-1 -mx-2 px-2"
+            max-height="calc(100vh - 120px)"
+            :items="snippetData"
+            :item-height="96"
+            :item-key="getQueueItemKey"
+          >
+            <template #default="{ item, index }">
+              <div class="pb-2">
+                <div
+                  @click="loadVideo(item, index)"
                   :class="[
-                    'w-7 h-7 flex items-center justify-center rounded-full transition-all',
-                    isDownloading[index] ? 'bg-green-500 text-white' : 'bg-indigo-400/10 text-indigo-400 hover:bg-indigo-400 hover:text-white'
+                    'group relative flex gap-3 p-2 rounded-xl border transition-all duration-300 cursor-pointer h-[88px]',
+                    clickIndex === index
+                      ? 'bg-indigo-500/10 border-indigo-500/30'
+                      : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
                   ]"
                 >
-                  <el-icon size="12" v-if="!isDownloading[index]"><Download /></el-icon>
-                  <el-icon size="12" v-else class="is-loading"><Loading /></el-icon>
-                </button>
+                  <div class="relative w-24 h-16 flex-shrink-0">
+                    <img
+                      :src="item.snippet.thumbnails.medium.url"
+                      :alt="`Playlist thumbnail: ${item.snippet.title}`"
+                      loading="lazy"
+                      decoding="async"
+                      class="w-full h-full object-cover rounded-lg shadow-lg"
+                    >
+                  </div>
+
+                  <div class="flex flex-col justify-center min-w-0 pr-12">
+                    <p :class="['text-xs font-bold leading-tight line-clamp-2', clickIndex === index ? 'text-indigo-300' : 'text-gray-200']">
+                      {{ item.snippet.title }}
+                    </p>
+                    <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter">Pos: {{ item.snippet.position }}</p>
+                  </div>
+
+                  <div class="absolute right-2 top-0 bottom-0 flex flex-col justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      @click.stop="deleteVideo(item.id)"
+                      class="w-7 h-7 flex items-center justify-center rounded-full bg-red-400/10 text-red-400 hover:bg-red-400 hover:text-white transition-all"
+                      :title="`Delete ${item.snippet.title}`"
+                    >
+                      <el-icon size="12"><Close /></el-icon>
+                    </button>
+                    <button
+                      @click.stop="download(item, index)"
+                      :class="[
+                        'w-7 h-7 flex items-center justify-center rounded-full transition-all',
+                        isDownloading[index] ? 'bg-green-500 text-white' : 'bg-indigo-400/10 text-indigo-400 hover:bg-indigo-400 hover:text-white'
+                      ]"
+                      :title="`Download ${item.snippet.title}`"
+                    >
+                      <el-icon size="12" v-if="!isDownloading[index]"><Download /></el-icon>
+                      <el-icon size="12" v-else class="is-loading"><Loading /></el-icon>
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </el-scrollbar>
+            </template>
+          </virtualList>
         </template>
 
         <template v-else>
@@ -198,6 +213,7 @@ import youtubePlayer from '../components/youtubePlayer.vue'
 import searchCard from '../components/searchCard.vue'
 import titleCard from '../components/titleCard.vue'
 import recommendationList from '../components/recommendationList.vue'
+import virtualList from '../components/virtualList.vue'
 import { downloadData } from '../api/downloadData'
 import { googleTokenLogin } from 'vue3-google-login'
 import {
@@ -234,7 +250,6 @@ const next = ref({
   nextItem: null,
   nextIndex: -1
 })
-const listItemsRef = ref([])
 const isSearching = ref(false)
 const playerOpacity = ref(1)
 const playerState = ref(-1) // -1: unstarted, 1: playing, 2: paused, 3: buffering
@@ -268,14 +283,7 @@ const changeIsPlayingItemBg = (newIndex) => {
 }
 
 const modifyListItemPos = (index) => {
-  if (!listItemsRef.value || !listItemsRef.value[index] || !scrollRef.value) return
-  const item = listItemsRef.value[index]
-  const container = scrollRef.value.$el || scrollRef.value
-  const itemOffsetTop = item.offsetTop
-  const containerHeight = container.clientHeight
-  const itemHeight = item.offsetHeight
-  const scrollTop = itemOffsetTop - containerHeight / 2 + itemHeight / 2
-  scrollRef.value.setScrollTop(scrollTop)
+  scrollRef.value?.scrollToIndex(index)
 }
 
 const showSearching = (state) => {
@@ -443,9 +451,7 @@ const handleGlobalKeyDown = (e) => {
   }
 }
 
-const listItems = (index) => (el) => {
-  listItemsRef.value[index] = el
-}
+const getQueueItemKey = (item, index) => item?.id ?? `${item?.snippet?.resourceId?.videoId ?? 'video'}-${index}`
 
 onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeyDown)
@@ -515,7 +521,7 @@ watch(
 }
 
 .action-btn {
-  @apply px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/5 text-xs font-medium transition-all;
+  @apply px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-200 hover:text-white border border-white/10 text-xs font-medium transition-all;
 }
 
 .animate-spin-slow {
@@ -529,5 +535,25 @@ watch(
 
 input[type='range'] {
   @apply cursor-pointer accent-indigo-500;
+}
+
+#controlArea {
+  view-transition-name: control-panel;
+}
+
+.glass-card-strong {
+  background: rgba(30, 41, 59, 0.65);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.metric-value {
+  min-width: 4.5rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.virtual-list {
+  scrollbar-gutter: stable;
 }
 </style>
