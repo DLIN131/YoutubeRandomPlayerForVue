@@ -1,5 +1,5 @@
 import request from '../utils/request'
-import { API_KEY } from '../utils/apiKey'
+import { API_KEY } from '../config/env'
 import { useUserStore } from '../stores'
 
 export const fetchYoutubeData = (url, params) => {

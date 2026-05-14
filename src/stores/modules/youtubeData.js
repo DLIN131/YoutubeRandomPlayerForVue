@@ -10,7 +10,7 @@ import {
 } from '../../api/fetchYoutubeData'
 import { useUserStore } from './user'
 import { ref } from 'vue'
-import { API_KEY } from '../../utils/apiKey'
+import { API_KEY } from '../../config/env'
 // user module token and setToken removeToken
 
 export const useYoutubeDataStore = defineStore('data', () => {

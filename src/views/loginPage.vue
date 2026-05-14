@@ -38,10 +38,10 @@
 import { googleTokenLogin } from 'vue3-google-login'
 import { useUserStore } from '../stores'
 import { useRouter } from 'vue-router'
+import { GOOGLE_CLIENT_ID } from '../config/env'
 
 const router = useRouter()
 const userStore = useUserStore()
-const GOOGLE_CLIENT_ID = '959560237311-13dbj26mjffjcph7r49pq3c57lbvpgrr.apps.googleusercontent.com'
 
 const handleGoogleAccessTokenLogin = async () => {
   try {

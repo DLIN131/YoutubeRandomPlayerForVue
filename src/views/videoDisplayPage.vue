@@ -226,6 +226,7 @@ import {
   Close,
   Loading
 } from '@element-plus/icons-vue'
+import { GOOGLE_CLIENT_ID } from '../config/env'
 
 const useYoutubeData = useYoutubeDataStore()
 const usePlaylist = usePlaylistStore()
@@ -390,7 +391,7 @@ const ensureOauthToken = async () => {
   if (userStore.oauthToken) return true
   try {
     const res = await googleTokenLogin({
-      clientId: '959560237311-13dbj26mjffjcph7r49pq3c57lbvpgrr.apps.googleusercontent.com',
+      clientId: GOOGLE_CLIENT_ID,
       scope: 'profile email https://www.googleapis.com/auth/youtube.force-ssl',
       prompt: 'consent'
     })
