@@ -1,7 +1,46 @@
-#This is a youtubeRandomPlayer that using vue3 to create
+# YouTube Random Player 操作手冊
 
-1. First , you need to paste a youtube playlist id or url into the text Area on the top
-2. Click the appen button to fetch the playlist data
-3. Just cllick the random  button to random play your video 
-4. You can search your list video when you click the search button
-5. You can use keyboard to control the video status i.e. W = preve video, S = next video, a and arrow left =  go back to five seconds ago, d and arrow right = Fast forward to five seconds
+這是一個基於 Vue 3 開發的進階 YouTube 播放器，專為隨機播放、播放清單管理以及 MP3 下載所設計。
+
+## 🚀 核心功能與操作指南
+
+### 1. 匯入與管理播放清單
+- **公開播放清單**：在畫面上方的輸入框貼上 YouTube 播放清單的 **ID** 或 **完整 URL**，點擊 **「Load」** 即可載入。
+- **您的 YouTube 清單 (My YouTube)**：點擊左側選單的「My YouTube」->「Connect」，登入 Google 帳號授權後，即可直接讀取並播放您個人的 YouTube 播放清單。
+- **歷史紀錄與儲存**：
+  - **Quick History**：畫面上方可快速切換近期載入過的播放清單。
+  - **Saved Playlists**：左側選單會記錄您儲存的清單，方便隨時點擊重新載入與刪除。
+
+### 2. 播放器控制與模式
+- **播放模式切換**：
+  - 點擊 **「SHUFFLE」** 按鈕：打亂目前清單進行隨機播放。
+  - 點擊 **「排序圖示 (Sequential)」**：恢復為依照原清單順序播放。
+- **介面調整**：播放控制區提供滑桿，可自由調整 **音量 (Volume)** 與 **播放器透明度 (Player Opacity)**。
+- **智慧推薦 (Discovery)**：在右側清單面板切換至「Discovery」分頁，系統會根據當前播放的標題自動搜尋並推薦相關的 YouTube 影片。
+
+### 3. 影片搜尋與下載 (Download Center)
+- **清單內搜尋**：點擊播放器控制區的 **「搜尋 (Search)」** 按鈕（放大鏡圖示），可快速過濾並點選當前清單中的特定影片。
+- **MP3 下載**：
+  - 在右側的 Queue 列表中，將游標懸停於影片上，點擊出現的 **「下載圖示」** 即可將該影片下載為 MP3。
+  - 點擊左側選單的 **「Download」** 進入專屬下載中心，您可以視覺化地搜尋整個清單並進行 MP3 下載。
+- **清單同步管理**：若您已授權登入，在 Queue 中點擊「打叉 (Close)」圖示，可以將該影片直接從您的 YouTube 播放清單中刪除。
+
+---
+
+## ⌨️ 鍵盤快捷鍵 (Keyboard Shortcuts)
+
+為了提供最流暢的操作體驗，本播放器支援全局鍵盤快捷鍵：
+
+| 按鍵 | 動作說明 |
+| :---: | :--- |
+| **`空白鍵 (Space)`** | **播放 / 暫停** 影片 |
+| **`W`** | 播放 **上一部** 影片 |
+| **`S`** | 播放 **下一部** 影片 |
+| **`A`** 或 **`⬅️` (左方向鍵)** | 影片 **倒轉 5 秒** |
+| **`D`** 或 **`➡️` (右方向鍵)** | 影片 **快進 5 秒** |
+| **`⬆️` (上方向鍵)** | **音量增加 5%** |
+| **`⬇️` (下方向鍵)** | **音量減少 5%** |
+
+---
+
+> **💡 進階提示 (Tip):** 授權 Google 帳號後，您不僅能讀取私人清單，點擊右上角的用戶頭像還能使用「Upload Current」功能將目前的清單資料備份至伺服器。
