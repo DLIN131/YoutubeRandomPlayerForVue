@@ -112,7 +112,7 @@
     <div
       id="playlistScrollContainer"
       :class="[
-        'fixed inset-y-0 right-0 w-full sm:w-96 glass-panel z-50 md:static md:w-4/12 md:bg-transparent md:border-none md:translate-x-0 transition-transform duration-300 flex flex-col',
+        'fixed inset-y-0 right-0 w-80 sm:w-96 glass-panel z-40 md:static md:w-4/12 md:bg-transparent md:border-none md:translate-x-0 transition-transform duration-300 flex flex-col',
         isMobilePlaylistOpen ? 'translate-x-0 shadow-2xl' : 'translate-x-full'
       ]"
     >
@@ -236,20 +236,25 @@
       <div
         v-if="isMobilePlaylistOpen"
         @click="isMobilePlaylistOpen = false"
-        class="fixed inset-0 bg-black/75 backdrop-blur-sm z-40 md:hidden"
+        class="fixed inset-0 bg-black/75 backdrop-blur-sm z-30 md:hidden"
       ></div>
     </transition>
 
     <searchCard v-if="isSearching" @handleClose="showSearching(false)" @loadVideo="loadVideo" :dataArr="snippetData" />
 
-    <!-- Floating Mobile Playlist Button -->
-    <button
+    <!-- Mobile Playlist Toggle (Right edge handle) -->
+    <div
       @click="isMobilePlaylistOpen = !isMobilePlaylistOpen"
-      class="md:hidden fixed right-4 bottom-6 z-30 px-4 py-3 rounded-full bg-indigo-600/90 hover:bg-indigo-500 backdrop-blur-xl border border-indigo-400/30 text-white font-bold text-xs flex items-center gap-2 shadow-2xl shadow-indigo-600/40 active:scale-95 transition-all"
+      :class="[
+        'md:hidden fixed top-1/2 -translate-y-1/2 w-8 h-16 glass-panel rounded-l-xl flex items-center justify-center z-50 cursor-pointer text-indigo-400 hover:text-indigo-300 border-r-0 shadow-2xl transition-all duration-300',
+        isMobilePlaylistOpen ? 'right-80 sm:right-96' : 'right-0'
+      ]"
+      :title="isMobilePlaylistOpen ? 'Close playlist' : 'Open playlist'"
     >
-      <el-icon size="16"><List /></el-icon>
-      <span>LIST ({{ snippetData.length }})</span>
-    </button>
+      <el-icon class="transition-transform duration-300" :class="{ 'rotate-180': isMobilePlaylistOpen }">
+        <ArrowLeftBold />
+      </el-icon>
+    </div>
   </div>
 </template>
 
@@ -271,8 +276,7 @@ import {
   Sort,
   Download,
   Close,
-  Loading,
-  List
+  Loading
 } from '@element-plus/icons-vue'
 import { GOOGLE_CLIENT_ID } from '../config/env'
 

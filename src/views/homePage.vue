@@ -238,120 +238,120 @@
 
     <!-- Main App Container -->
     <div class="flex-1 flex overflow-hidden">
-      <!-- Desktop Sidebar with Smooth Slide Transition (桌面端側邊欄) -->
-      <transition name="sidebar-slide">
-        <aside
-          v-if="!notDisplaySideMenu"
-          class="hidden md:flex w-64 glass-panel flex-col z-40 border-r border-white/5 shrink-0 transition-all duration-300"
-        >
-          <div class="p-4 h-full flex flex-col">
-            <div class="flex items-center justify-between mb-6">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-cyan-400 flex items-center justify-center shadow-md shadow-indigo-500/20">
-                  <el-icon class="text-white text-base"><VideoPlay /></el-icon>
-                </div>
-                <h2 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-                  YT Player
-                </h2>
+      <!-- Desktop Sidebar with Synchronous Width Transition (桌面端側邊欄即時縮放) -->
+      <aside
+        :class="[
+          'hidden md:flex flex-col z-40 glass-panel border-r border-white/5 shrink-0 transition-all duration-300 ease-in-out overflow-hidden',
+          notDisplaySideMenu ? '!w-0 !p-0 !border-r-0 opacity-0 pointer-events-none' : 'w-64 opacity-100'
+        ]"
+      >
+        <div class="w-64 p-4 h-full flex flex-col shrink-0">
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-cyan-400 flex items-center justify-center shadow-md shadow-indigo-500/20">
+                <el-icon class="text-white text-base"><VideoPlay /></el-icon>
               </div>
-              <button
-                @click="toggleMenu"
-                class="w-9 h-9 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-gray-400 hover:text-white"
-                title="Collapse sidebar"
-              >
-                <el-icon><Fold /></el-icon>
-              </button>
+              <h2 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+                YT Player
+              </h2>
             </div>
+            <button
+              @click="toggleMenu"
+              class="w-9 h-9 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-gray-400 hover:text-white"
+              title="Collapse sidebar"
+            >
+              <el-icon><Fold /></el-icon>
+            </button>
+          </div>
 
-            <el-scrollbar class="flex-1 -mx-2 px-2">
-              <el-menu router class="side-menu-modern" :default-active="$route.path">
-                <el-menu-item index="/player" class="menu-item-modern">
-                  <el-icon><House /></el-icon>
-                  <span>Home</span>
+          <el-scrollbar class="flex-1 -mx-2 px-2">
+            <el-menu router class="side-menu-modern" :default-active="$route.path">
+              <el-menu-item index="/player" class="menu-item-modern">
+                <el-icon><House /></el-icon>
+                <span>Home</span>
+              </el-menu-item>
+              <el-menu-item index="/downLoad" class="menu-item-modern">
+                <el-icon><Download /></el-icon>
+                <span>Download</span>
+              </el-menu-item>
+
+              <div class="menu-divider"></div>
+
+              <el-sub-menu index="history" popper-class="modern-submenu-pop">
+                <template #title>
+                  <div class="flex items-center gap-2">
+                    <el-icon><Clock /></el-icon>
+                    <span>Quick History</span>
+                  </div>
+                </template>
+                <el-menu-item v-if="listNames.length === 0" disabled class="menu-item-modern !text-gray-500">
+                  <span>No history yet</span>
                 </el-menu-item>
-                <el-menu-item index="/downLoad" class="menu-item-modern">
-                  <el-icon><Download /></el-icon>
-                  <span>Download</span>
+                <el-menu-item
+                  v-for="(item, index) in listNames"
+                  :key="`side-history-${item.value}-${index}`"
+                  class="menu-item-modern"
+                  @click="handleCommand(item.value)"
+                >
+                  <span class="truncate">{{ item.name }}</span>
                 </el-menu-item>
+              </el-sub-menu>
 
-                <div class="menu-divider"></div>
+              <el-sub-menu index="saved" popper-class="modern-submenu-pop">
+                <template #title>
+                  <div class="flex items-center gap-2">
+                    <el-icon><List /></el-icon>
+                    <span>Saved Playlists</span>
+                  </div>
+                  <el-icon v-if="isfetch" class="is-loading ml-auto"><Loading /></el-icon>
+                </template>
+                <el-menu-item
+                  v-for="(item, index) in playlistStore.listnames"
+                  :key="index"
+                  class="menu-item-modern group"
+                  @click="handlefetchPlaylist(item)"
+                >
+                  <span class="truncate">{{ item }}</span>
+                  <button
+                    @click.stop="handleDeleteList(item)"
+                    class="ml-auto opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all"
+                  >
+                    <el-icon size="14"><Close /></el-icon>
+                  </button>
+                </el-menu-item>
+              </el-sub-menu>
 
-                <el-sub-menu index="history" popper-class="modern-submenu-pop">
-                  <template #title>
-                    <div class="flex items-center gap-2">
-                      <el-icon><Clock /></el-icon>
-                      <span>Quick History</span>
-                    </div>
-                  </template>
-                  <el-menu-item v-if="listNames.length === 0" disabled class="menu-item-modern !text-gray-500">
-                    <span>No history yet</span>
+              <el-sub-menu index="my-yt" popper-class="modern-submenu-pop">
+                <template #title>
+                  <div class="flex items-center gap-2">
+                    <el-icon><VideoPlay /></el-icon>
+                    <span>My YouTube</span>
+                  </div>
+                  <el-icon v-if="isFetchingMyPlaylist" class="is-loading ml-auto"><Loading /></el-icon>
+                </template>
+                <el-menu-item v-if="!userStore.oauthToken" @click="handleGoogleYoutubeLogin" class="menu-item-modern">
+                  <el-icon><Connection /></el-icon>
+                  <span>Connect</span>
+                </el-menu-item>
+                <template v-else>
+                  <el-menu-item @click="fetchMyYoutubePlaylists" class="menu-item-modern">
+                    <el-icon><Refresh /></el-icon>
+                    <span>Refresh</span>
                   </el-menu-item>
                   <el-menu-item
-                    v-for="(item, index) in listNames"
-                    :key="`side-history-${item.value}-${index}`"
+                    v-for="(item, index) in useYoutubeData.myPlaylistData"
+                    :key="`${item.value}-${index}`"
+                    @click="handleSelectMyPlaylist(item.value)"
                     class="menu-item-modern"
-                    @click="handleCommand(item.value)"
                   >
                     <span class="truncate">{{ item.name }}</span>
                   </el-menu-item>
-                </el-sub-menu>
-
-                <el-sub-menu index="saved" popper-class="modern-submenu-pop">
-                  <template #title>
-                    <div class="flex items-center gap-2">
-                      <el-icon><List /></el-icon>
-                      <span>Saved Playlists</span>
-                    </div>
-                    <el-icon v-if="isfetch" class="is-loading ml-auto"><Loading /></el-icon>
-                  </template>
-                  <el-menu-item
-                    v-for="(item, index) in playlistStore.listnames"
-                    :key="index"
-                    class="menu-item-modern group"
-                    @click="handlefetchPlaylist(item)"
-                  >
-                    <span class="truncate">{{ item }}</span>
-                    <button
-                      @click.stop="handleDeleteList(item)"
-                      class="ml-auto opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all"
-                    >
-                      <el-icon size="14"><Close /></el-icon>
-                    </button>
-                  </el-menu-item>
-                </el-sub-menu>
-
-                <el-sub-menu index="my-yt" popper-class="modern-submenu-pop">
-                  <template #title>
-                    <div class="flex items-center gap-2">
-                      <el-icon><VideoPlay /></el-icon>
-                      <span>My YouTube</span>
-                    </div>
-                    <el-icon v-if="isFetchingMyPlaylist" class="is-loading ml-auto"><Loading /></el-icon>
-                  </template>
-                  <el-menu-item v-if="!userStore.oauthToken" @click="handleGoogleYoutubeLogin" class="menu-item-modern">
-                    <el-icon><Connection /></el-icon>
-                    <span>Connect</span>
-                  </el-menu-item>
-                  <template v-else>
-                    <el-menu-item @click="fetchMyYoutubePlaylists" class="menu-item-modern">
-                      <el-icon><Refresh /></el-icon>
-                      <span>Refresh</span>
-                    </el-menu-item>
-                    <el-menu-item
-                      v-for="(item, index) in useYoutubeData.myPlaylistData"
-                      :key="`${item.value}-${index}`"
-                      @click="handleSelectMyPlaylist(item.value)"
-                      class="menu-item-modern"
-                    >
-                      <span class="truncate">{{ item.name }}</span>
-                    </el-menu-item>
-                  </template>
-                </el-sub-menu>
-              </el-menu>
-            </el-scrollbar>
-          </div>
-        </aside>
-      </transition>
+                </template>
+              </el-sub-menu>
+            </el-menu>
+          </el-scrollbar>
+        </div>
+      </aside>
 
       <!-- Main Content Area -->
       <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
@@ -689,18 +689,6 @@ onMounted(async () => {
   opacity: 0;
   transform: translateY(-24px) scale(0.97);
   filter: blur(8px);
-}
-
-/* Desktop Sidebar Slide Transition */
-.sidebar-slide-enter-active,
-.sidebar-slide-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.sidebar-slide-enter-from,
-.sidebar-slide-leave-to {
-  transform: translateX(-100%);
-  opacity: 0;
 }
 
 .fade-enter-active,
