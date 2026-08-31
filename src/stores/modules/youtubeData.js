@@ -19,6 +19,9 @@ export const useYoutubeDataStore = defineStore('data', () => {
   const listNameData = ref([])
   const latestIndex = ref(0)
   const isLoaded = ref(true)
+  const isFetching = ref(false)
+  const fetchedCount = ref(0)
+  const totalCount = ref(0)
   const currentPlaylistId = ref('')
   const currentListName = ref('')
   const myPlaylistData = ref([])
@@ -37,11 +40,17 @@ export const useYoutubeDataStore = defineStore('data', () => {
     })
     snippetData.value = []
     isLoaded.value = false
+    isFetching.value = true
+    fetchedCount.value = 0
+    totalCount.value = 0
     do {
       // 持續獲取清單的內容
       // 如果nextpagetoken為undefined則不繼續抓取資料
       try {
         const res = await fetchYoutubeData('/playlistItems', params.value)
+        if (res.data?.pageInfo?.totalResults) {
+          totalCount.value = res.data.pageInfo.totalResults
+        }
         res.data.items.forEach(item => {
           if (item.snippet.title !== 'Deleted video' &&
             item.snippet.title !== 'Private video') {
@@ -54,7 +63,7 @@ export const useYoutubeDataStore = defineStore('data', () => {
                 },
                 thumbnails: {
                   medium: {
-                    url: item.snippet.thumbnails.medium.url
+                    url: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || ''
                   }
                 },
                 title: item.snippet.title
@@ -63,14 +72,17 @@ export const useYoutubeDataStore = defineStore('data', () => {
             snippetData.value.push(filterData)
           }
         })
+        fetchedCount.value = snippetData.value.length
         params.value.pageToken = res.data.nextPageToken
       } catch (err) {
         console.log(err)
         alert('抓取清單發生錯誤')
+        isFetching.value = false
         return
       }
     } while (params.value.pageToken !== undefined)
     isLoaded.value = true
+    isFetching.value = false
   }
 
   const getListName = async (listId) => {
@@ -240,6 +252,9 @@ export const useYoutubeDataStore = defineStore('data', () => {
     getMyPlaylistData,
     latestIndex,
     isLoaded,
+    isFetching,
+    fetchedCount,
+    totalCount,
     getCompleteData,
     deleteItem,
     recommendedVideos,

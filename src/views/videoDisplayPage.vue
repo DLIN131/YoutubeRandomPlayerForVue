@@ -14,8 +14,19 @@
           @changeState="getPlayerState"
         />
         <div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400 gap-4">
-          <el-icon class="text-6xl animate-pulse"><VideoPlay /></el-icon>
-          <span class="text-lg font-medium">Waiting for video...</span>
+          <template v-if="useYoutubeData.isFetching">
+            <el-icon class="text-6xl animate-spin text-indigo-400"><Loading /></el-icon>
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-lg font-medium text-indigo-300">Fetching playlist...</span>
+              <span class="text-sm font-mono text-indigo-400/80">
+                {{ useYoutubeData.fetchedCount }}{{ useYoutubeData.totalCount ? ` / ${useYoutubeData.totalCount}` : '' }}
+              </span>
+            </div>
+          </template>
+          <template v-else>
+            <el-icon class="text-6xl animate-pulse"><VideoPlay /></el-icon>
+            <span class="text-lg font-medium">Waiting for video...</span>
+          </template>
         </div>
       </div>
 
@@ -97,35 +108,61 @@
       </div>
     </div>
 
-    <!-- Playlist Section -->
+    <!-- Playlist Section (Desktop Side Panel / Mobile Slide-Over Drawer) -->
     <div
       id="playlistScrollContainer"
-      class="fixed inset-y-0 right-0 w-80 glass-panel md:static md:w-4/12 md:bg-transparent md:border-none translate-x-full md:translate-x-0 transition-transform duration-300 z-30"
+      :class="[
+        'fixed inset-y-0 right-0 w-full sm:w-96 glass-panel z-50 md:static md:w-4/12 md:bg-transparent md:border-none md:translate-x-0 transition-transform duration-300 flex flex-col',
+        isMobilePlaylistOpen ? 'translate-x-0 shadow-2xl' : 'translate-x-full'
+      ]"
     >
       <div class="p-4 h-full flex flex-col">
-        <div class="flex items-center gap-4 mb-6 px-2">
+        <div class="flex items-center justify-between mb-4 px-2 shrink-0">
+          <div class="flex items-center gap-4">
+            <button
+              @click="activeTab = 'queue'"
+              :class="[
+                'text-xs font-bold uppercase tracking-widest pb-2 border-b-2 transition-all flex items-center gap-1.5',
+                activeTab === 'queue' ? 'text-indigo-400 border-indigo-400' : 'text-gray-500 border-transparent hover:text-gray-300'
+              ]"
+            >
+              <span>LIST</span>
+              <span v-if="useYoutubeData.isFetching" class="text-indigo-300 font-mono animate-pulse">
+                ({{ useYoutubeData.fetchedCount }}{{ useYoutubeData.totalCount ? `/${useYoutubeData.totalCount}` : '' }})
+              </span>
+              <span v-else>({{ snippetData.length }})</span>
+            </button>
+            <button
+              @click="activeTab = 'discovery'"
+              :class="[
+                'text-xs font-bold uppercase tracking-widest pb-2 border-b-2 transition-all',
+                activeTab === 'discovery' ? 'text-indigo-400 border-indigo-400' : 'text-gray-500 border-transparent hover:text-gray-300'
+              ]"
+            >
+              Discovery
+            </button>
+          </div>
+
+          <!-- Mobile Close Button for Playlist Drawer -->
           <button
-            @click="activeTab = 'queue'"
-            :class="[
-              'text-xs font-bold uppercase tracking-widest pb-2 border-b-2 transition-all',
-              activeTab === 'queue' ? 'text-indigo-400 border-indigo-400' : 'text-gray-500 border-transparent hover:text-gray-300'
-            ]"
+            @click="isMobilePlaylistOpen = false"
+            class="md:hidden w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all"
+            title="Close playlist"
           >
-            Queue ({{ snippetData.length }})
-          </button>
-          <button
-            @click="activeTab = 'discovery'"
-            :class="[
-              'text-xs font-bold uppercase tracking-widest pb-2 border-b-2 transition-all',
-              activeTab === 'discovery' ? 'text-indigo-400 border-indigo-400' : 'text-gray-500 border-transparent hover:text-gray-300'
-            ]"
-          >
-            Discovery
+            <el-icon size="16"><Close /></el-icon>
           </button>
         </div>
 
         <template v-if="activeTab === 'queue'">
+          <div v-if="useYoutubeData.isFetching && snippetData.length === 0" class="flex-1 flex flex-col items-center justify-center py-20 text-gray-400 gap-3">
+            <el-icon class="is-loading text-4xl text-indigo-400"><Loading /></el-icon>
+            <p class="text-sm font-semibold text-gray-300">Fetching videos...</p>
+            <p class="text-xs text-indigo-400 font-mono">
+              {{ useYoutubeData.fetchedCount }} {{ useYoutubeData.totalCount ? `/ ${useYoutubeData.totalCount}` : 'items' }}
+            </p>
+          </div>
           <virtualList
+            v-else
             ref="scrollRef"
             class="flex-1"
             container-class="virtual-list flex-1 -mx-2 px-2"
@@ -194,15 +231,25 @@
       </div>
     </div>
 
+    <!-- Mobile Playlist Backdrop Overlay -->
+    <transition name="fade">
+      <div
+        v-if="isMobilePlaylistOpen"
+        @click="isMobilePlaylistOpen = false"
+        class="fixed inset-0 bg-black/75 backdrop-blur-sm z-40 md:hidden"
+      ></div>
+    </transition>
+
     <searchCard v-if="isSearching" @handleClose="showSearching(false)" @loadVideo="loadVideo" :dataArr="snippetData" />
 
-    <!-- Mobile Playlist Toggle -->
-    <div
-      @click="togglePlaylist"
-      class="md:hidden fixed right-0 top-1/2 -translate-y-1/2 w-8 h-16 glass-panel rounded-l-xl flex items-center justify-center z-40 cursor-pointer text-indigo-400"
+    <!-- Floating Mobile Playlist Button -->
+    <button
+      @click="isMobilePlaylistOpen = !isMobilePlaylistOpen"
+      class="md:hidden fixed right-4 bottom-6 z-30 px-4 py-3 rounded-full bg-indigo-600/90 hover:bg-indigo-500 backdrop-blur-xl border border-indigo-400/30 text-white font-bold text-xs flex items-center gap-2 shadow-2xl shadow-indigo-600/40 active:scale-95 transition-all"
     >
-      <el-icon id="toggleListBtn" class="transition-transform duration-300"><ArrowLeftBold /></el-icon>
-    </div>
+      <el-icon size="16"><List /></el-icon>
+      <span>LIST ({{ snippetData.length }})</span>
+    </button>
   </div>
 </template>
 
@@ -224,7 +271,8 @@ import {
   Sort,
   Download,
   Close,
-  Loading
+  Loading,
+  List
 } from '@element-plus/icons-vue'
 import { GOOGLE_CLIENT_ID } from '../config/env'
 
@@ -255,6 +303,7 @@ const isSearching = ref(false)
 const playerOpacity = ref(1)
 const playerState = ref(-1) // -1: unstarted, 1: playing, 2: paused, 3: buffering
 const activeTab = ref('queue')
+const isMobilePlaylistOpen = ref(false)
 
 const loadVideo = async (item, index) => {
   if (!item) return
@@ -414,13 +463,6 @@ const deleteVideo = async (id) => {
     const index = snippetData.value.findIndex((item) => item.id === id)
     if (index !== -1) snippetData.value.splice(index, 1)
   }
-}
-
-const togglePlaylist = () => {
-  const toggleBtn = document.getElementById('toggleListBtn')
-  const scrollEle = document.getElementById('playlistScrollContainer')
-  scrollEle.classList.toggle('translate-x-full')
-  toggleBtn.classList.toggle('rotate-180')
 }
 
 const handleGlobalKeyDown = (e) => {
