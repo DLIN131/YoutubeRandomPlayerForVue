@@ -17,7 +17,7 @@
           <template v-if="useYoutubeData.isFetching">
             <el-icon class="text-6xl animate-spin text-indigo-400"><Loading /></el-icon>
             <div class="flex flex-col items-center gap-1">
-              <span class="text-lg font-medium text-indigo-300">Fetching playlist...</span>
+              <span class="text-lg font-medium text-indigo-300">{{ useYoutubeData.isUpdating ? 'Checking new songs...' : 'Fetching playlist...' }}</span>
               <span class="text-sm font-mono text-indigo-400/80">
                 {{ useYoutubeData.fetchedCount }}{{ useYoutubeData.totalCount ? ` / ${useYoutubeData.totalCount}` : '' }}
               </span>
@@ -308,6 +308,9 @@ const playerOpacity = ref(1)
 const playerState = ref(-1) // -1: unstarted, 1: playing, 2: paused, 3: buffering
 const activeTab = ref('queue')
 const isMobilePlaylistOpen = ref(false)
+const isShuffled = ref(false)
+// 目前清單（snippetData）是哪個 YouTube 播放清單；伺服器存的清單為空字串
+const queuePlaylistId = ref('')
 
 const loadVideo = async (item, index) => {
   if (!item) return
@@ -412,11 +415,14 @@ const setRandomPlay = () => {
     ;[arr[i], arr[j]] = [arr[j], arr[i]]
   }
   snippetData.value = arr
+  isShuffled.value = true
   loadVideo(snippetData.value[0], 0)
 }
 
 const setOrderPlay = () => {
   snippetData.value = [...useYoutubeData.snippetData]
+  queuePlaylistId.value = useYoutubeData.currentPlaylistId
+  isShuffled.value = false
   loadVideo(snippetData.value[0], 0)
 }
 
@@ -500,12 +506,82 @@ const handleGlobalKeyDown = (e) => {
 
 const getQueueItemKey = (item, index) => item?.id ?? `${item?.snippet?.resourceId?.videoId ?? 'video'}-${index}`
 
-onMounted(() => {
-  window.addEventListener('keydown', handleGlobalKeyDown)
+const resumeLatest = () => {
   snippetData.value = [...useYoutubeData.snippetData]
-  const latestIdx = useYoutubeData.latestIndex || 0
+  queuePlaylistId.value = useYoutubeData.currentPlaylistId
+  isShuffled.value = false
+  const latestIdx = Math.min(useYoutubeData.latestIndex || 0, snippetData.value.length - 1)
   if (snippetData.value.length > 0) {
     loadVideo(snippetData.value[latestIdx], latestIdx)
+  }
+}
+
+// 換成另一個清單：維持原本的行為，不自動播放，下一首從第一首開始
+const replaceQueue = (playlistId) => {
+  snippetData.value = [...useYoutubeData.snippetData]
+  queuePlaylistId.value = playlistId
+  isShuffled.value = false
+  clickIndex.value = -1
+  next.value.nextIndex = 0
+  next.value.prevIndex = -1
+  useYoutubeData.latestIndex = 0
+}
+
+// 清單內容換了但正在播的歌不中斷：重新對到正在播的那首，修正高亮與上下首
+const relinkPlaying = (playingItemId) => {
+  if (id.value === -1 || clickIndex.value === -1) return
+  let playingIndex = snippetData.value.findIndex((item) => item.id === playingItemId)
+  if (playingIndex === -1) {
+    playingIndex = snippetData.value.findIndex((item) => item.snippet.resourceId.videoId === videoId.value)
+  }
+  clickIndex.value = playingIndex
+  id.value = playingIndex
+  if (playingIndex === -1) return
+  useYoutubeData.latestIndex = playingIndex
+  next.value.prevIndex = playingIndex - 1
+  next.value.prevItem = snippetData.value[playingIndex - 1]
+  next.value.nextIndex = playingIndex + 1
+  next.value.nextItem = snippetData.value[playingIndex + 1]
+}
+
+const handleSync = ({ playlistId, mode, added }) => {
+  const isSameQueue = playlistId === queuePlaylistId.value && snippetData.value.length > 0
+
+  if (mode === 'resume') {
+    isPrepare.value ? replaceQueue(playlistId) : resumeLatest()
+    return
+  }
+  if (!isSameQueue) {
+    replaceQueue(playlistId)
+    return
+  }
+
+  const playingItemId = snippetData.value[clickIndex.value]?.id
+
+  if (mode === 'update' && isShuffled.value) {
+    // 隨機播放：新歌隨機插進目前這首之後，還沒播到的部分
+    const arr = [...snippetData.value]
+    const start = clickIndex.value + 1
+    added.forEach((video) => {
+      const at = start + Math.floor(Math.random() * (arr.length - start + 1))
+      arr.splice(at, 0, video)
+    })
+    snippetData.value = arr
+  } else {
+    // 依序播放的更新，或同一個清單的完整載入：換成 store 的新順序
+    snippetData.value = [...useYoutubeData.snippetData]
+    isShuffled.value = false
+  }
+  relinkPlaying(playingItemId)
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleGlobalKeyDown)
+  if (useYoutubeData.snippetData.length > 0) {
+    resumeLatest()
+  } else {
+    // 重新整理網頁後，從本機快取接續上次的清單（完成時由 handleSync 接著播）
+    useYoutubeData.restoreLastPlaylist()
   }
 })
 
@@ -515,13 +591,8 @@ onBeforeUnmount(() => {
 })
 
 watch(
-  () => useYoutubeData.isLoaded,
-  (newIsLoaded) => {
-    if (newIsLoaded) {
-      snippetData.value = [...useYoutubeData.snippetData]
-      useYoutubeData.latestIndex = 0
-    }
-  }
+  () => useYoutubeData.lastSync.version,
+  () => handleSync(useYoutubeData.lastSync)
 )
 
 watch(
@@ -529,6 +600,8 @@ watch(
   (newPlaylist) => {
     if (newPlaylist) {
       snippetData.value = [...newPlaylist]
+      queuePlaylistId.value = ''
+      isShuffled.value = false
     }
   }
 )

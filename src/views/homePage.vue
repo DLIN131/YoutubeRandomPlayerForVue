@@ -33,7 +33,7 @@
           <div class="flex items-center justify-between mb-2">
             <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Load Playlist</label>
             <span v-if="useYoutubeData.isFetching" class="text-xs text-indigo-400 font-mono animate-pulse">
-              Fetching: {{ useYoutubeData.fetchedCount }}{{ useYoutubeData.totalCount ? `/${useYoutubeData.totalCount}` : '' }}
+              {{ useYoutubeData.isUpdating ? 'Checking' : 'Fetching' }}: {{ useYoutubeData.fetchedCount }}{{ useYoutubeData.totalCount ? `/${useYoutubeData.totalCount}` : '' }}
             </span>
           </div>
           <div class="relative group">
@@ -55,6 +55,31 @@
               <span v-else>Load</span>
               <el-icon v-if="isLoading || useYoutubeData.isFetching" class="is-loading"><Loading /></el-icon>
             </button>
+          </div>
+
+          <!-- 目前清單：更新歌曲 / 完整載入 -->
+          <div v-if="useYoutubeData.currentPlaylistId" class="mt-3">
+            <p class="text-[11px] text-gray-400 mb-2 truncate">
+              Current: <span class="text-gray-200 font-medium">{{ useYoutubeData.currentListName || useYoutubeData.currentPlaylistId }}</span>
+            </p>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                @click="handleMobileSync('update')"
+                :disabled="isLoading || useYoutubeData.isFetching"
+                class="p-3 rounded-2xl bg-white/5 hover:bg-indigo-600/20 border border-white/10 hover:border-indigo-500/30 text-left transition-all active:scale-95 disabled:opacity-50"
+              >
+                <span class="text-sm font-semibold text-gray-100 block">更新歌曲</span>
+                <span class="text-[10px] text-gray-400">只抓上次之後新增的歌曲</span>
+              </button>
+              <button
+                @click="handleMobileSync('full')"
+                :disabled="isLoading || useYoutubeData.isFetching"
+                class="p-3 rounded-2xl bg-white/5 hover:bg-indigo-600/20 border border-white/10 hover:border-indigo-500/30 text-left transition-all active:scale-95 disabled:opacity-50"
+              >
+                <span class="text-sm font-semibold text-gray-100 block">完整載入</span>
+                <span class="text-[10px] text-gray-400">全部重抓（含刪除、排序變更）</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -410,20 +435,52 @@
                   type="text"
                   placeholder="Paste Playlist URL or ID..."
                   class="w-full h-10 bg-white/5 border border-white/10 rounded-xl px-4 text-sm focus:border-indigo-500/50 focus:bg-white/10 outline-none transition-all"
-                  @keyup.enter="fetchData"
+                  @keyup.enter="fetchData()"
                 >
                 <button
-                  @click="fetchData"
+                  @click="fetchData()"
                   :disabled="isLoading || useYoutubeData.isFetching"
                   class="absolute right-1 top-1 bottom-1 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-700/80 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
                 >
                   <span v-if="isLoading || useYoutubeData.isFetching" class="font-mono text-xs">
-                    Fetching ({{ useYoutubeData.fetchedCount }}{{ useYoutubeData.totalCount ? `/${useYoutubeData.totalCount}` : '' }})
+                    {{ useYoutubeData.isUpdating ? 'Checking' : 'Fetching' }} ({{ useYoutubeData.fetchedCount }}{{ useYoutubeData.totalCount ? `/${useYoutubeData.totalCount}` : '' }})
                   </span>
                   <span v-else>Load</span>
                   <el-icon v-if="isLoading || useYoutubeData.isFetching" class="is-loading"><Loading /></el-icon>
                 </button>
               </div>
+
+              <!-- 目前清單：更新歌曲 / 完整載入 -->
+              <el-dropdown
+                v-if="useYoutubeData.currentPlaylistId"
+                @command="syncCurrentPlaylist"
+                trigger="click"
+                :disabled="isLoading || useYoutubeData.isFetching"
+              >
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white transition-all disabled:opacity-50"
+                  :disabled="isLoading || useYoutubeData.isFetching"
+                  :title="`Sync ${useYoutubeData.currentListName || 'playlist'}`"
+                >
+                  <el-icon :class="{ 'is-loading': useYoutubeData.isFetching }"><Refresh /></el-icon>
+                </button>
+                <template #dropdown>
+                  <el-dropdown-menu class="modern-dropdown-menu">
+                    <el-dropdown-item command="update">
+                      <div class="flex flex-col py-1">
+                        <span class="text-sm font-semibold">更新歌曲</span>
+                        <span class="text-[11px] text-gray-500">只抓上次之後新增的歌曲</span>
+                      </div>
+                    </el-dropdown-item>
+                    <el-dropdown-item command="full">
+                      <div class="flex flex-col py-1">
+                        <span class="text-sm font-semibold">完整載入</span>
+                        <span class="text-[11px] text-gray-500">全部歌曲重新抓取（含刪除、排序變更）</span>
+                      </div>
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
             </div>
           </div>
 
@@ -470,7 +527,7 @@
           >
             <el-icon class="is-loading text-indigo-400 text-lg"><Loading /></el-icon>
             <div class="flex items-center gap-2">
-              <span class="text-xs font-semibold text-white">Fetching videos:</span>
+              <span class="text-xs font-semibold text-white">{{ useYoutubeData.isUpdating ? 'Checking new songs:' : 'Fetching videos:' }}</span>
               <span class="text-xs text-indigo-300 font-mono font-bold">
                 {{ useYoutubeData.fetchedCount }}{{ useYoutubeData.totalCount ? ` / ${useYoutubeData.totalCount}` : '' }}
               </span>
@@ -500,6 +557,8 @@ import {
 } from '@element-plus/icons-vue'
 import { useYoutubeDataStore, useUserStore, usePlaylistStore } from '../stores'
 import { googleTokenLogin } from 'vue3-google-login'
+import { ElMessage } from 'element-plus'
+import 'element-plus/es/components/message/style/css'
 import { GOOGLE_CLIENT_ID } from '../config/env'
 
 const isLoading = ref(false)
@@ -514,17 +573,47 @@ const playlistStore = usePlaylistStore()
 const isUploading = ref(false)
 const isFetchingMyPlaylist = ref(false)
 
+// mode: 'auto'（有本機快取就只更新新歌，沒有就完整載入）、'update'、'full'
+const loadPlaylist = async (id, mode = 'auto') => {
+  if (!id) return
+  isLoading.value = true
+  try {
+    if (mode === 'full') {
+      const ok = await useYoutubeData.getSnippetData(id)
+      if (!ok) return
+      await useYoutubeData.getListName(id)
+      ElMessage.success(`已載入 ${useYoutubeData.snippetData.length} 首歌曲`)
+      return
+    }
+    const result = await useYoutubeData.updateSnippetData(id)
+    if (!result) return
+    await useYoutubeData.getListName(id)
+    if (result.mode === 'full') {
+      ElMessage.success(`已載入 ${result.added} 首歌曲`)
+    } else if (result.added > 0) {
+      ElMessage.success(`新增了 ${result.added} 首歌曲`)
+    } else {
+      ElMessage.info('已是最新，沒有新增的歌曲')
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
 const fetchData = async () => {
   const pattern = /list=([a-zA-Z0-9_-]+)/
   const match = listId.value.match(pattern)
   if (!listId.value) return
   if (match) listId.value = match[1]
+  await loadPlaylist(listId.value)
+}
 
-  isLoading.value = true
-  await useYoutubeData.getSnippetData(listId.value)
-  await useYoutubeData.getListName(listId.value)
-  useYoutubeData.latestIndex = 0
-  isLoading.value = false
+// 目前清單的「更新歌曲」或「完整載入」
+const syncCurrentPlaylist = (mode) => loadPlaylist(useYoutubeData.currentPlaylistId, mode)
+
+const handleMobileSync = async (mode) => {
+  await syncCurrentPlaylist(mode)
+  isMobileMenuOpen.value = false
 }
 
 const handleCommand = async (command) => {

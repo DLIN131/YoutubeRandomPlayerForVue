@@ -6,6 +6,33 @@ export const fetchYoutubeData = (url, params) => {
   return request.get(url, { params })
 }
 
+// 播放清單的一頁（最多 50 首），含標題、縮圖等完整資料
+export const fetchPlaylistPage = (playlistId, pageToken = '') => {
+  return request.get('/playlistItems', {
+    params: {
+      part: 'contentDetails,id,snippet,status',
+      playlistId,
+      maxResults: 50,
+      pageToken,
+      key: API_KEY
+    }
+  })
+}
+
+// 只取一頁的 item id，回應很小，給「更新歌曲」快速掃描用
+export const fetchPlaylistPageIds = (playlistId, pageToken = '') => {
+  return request.get('/playlistItems', {
+    params: {
+      part: 'id',
+      fields: 'nextPageToken,pageInfo/totalResults,items/id',
+      playlistId,
+      maxResults: 50,
+      pageToken,
+      key: API_KEY
+    }
+  })
+}
+
 export const fetchPlayListName = (url, params) => {
   return request.get(url, { params })
 }
