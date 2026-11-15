@@ -91,6 +91,123 @@ input, button {
   background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
+/* Element Plus 深色主題
+   下拉選單、對話框、提示訊息都是掛在 body 底下，元件裡的 scoped 樣式套不到，所以統一寫在這裡。
+   html 上的 class="dark" 會啟用 Element Plus 的深色變數，這裡再調成和網站一致的配色。 */
+html.dark {
+  --el-color-primary: #6366f1;
+  --el-color-primary-light-3: #818cf8;
+  --el-color-primary-light-5: #a5b4fc;
+  --el-color-primary-light-7: #3730a3;
+  --el-color-primary-light-8: #312e81;
+  --el-color-primary-light-9: #1e1b4b;
+  --el-color-primary-dark-2: #4f46e5;
+  --el-bg-color: #0f172a;
+  --el-bg-color-overlay: #111827;
+  --el-text-color-primary: #f3f4f6;
+  --el-text-color-regular: #e5e7eb;
+  --el-text-color-secondary: #9ca3af;
+  --el-border-color: rgba(255, 255, 255, 0.12);
+  --el-border-color-light: rgba(255, 255, 255, 0.1);
+  --el-border-color-lighter: rgba(255, 255, 255, 0.08);
+  --el-fill-color-light: rgba(255, 255, 255, 0.06);
+  --el-menu-bg-color: transparent;
+  --el-menu-text-color: #d1d5db;
+  --el-menu-hover-bg-color: rgba(255, 255, 255, 0.05);
+  --el-menu-active-color: #a5b4fc;
+}
+
+/* 下拉選單 */
+.el-popper.is-light,
+.el-dropdown__popper.el-popper {
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+.el-dropdown-menu {
+  background: transparent;
+  padding: 0.25rem;
+}
+
+.el-dropdown-menu__item {
+  border-radius: 0.5rem;
+  color: #e5e7eb;
+}
+
+.el-dropdown-menu__item:not(.is-disabled):hover,
+.el-dropdown-menu__item:not(.is-disabled):focus {
+  background-color: rgba(99, 102, 241, 0.2);
+  color: #ffffff;
+}
+
+.el-dropdown-menu__item.is-disabled {
+  color: #6b7280;
+}
+
+/* 側邊選單展開的子選單 */
+.side-menu-modern .el-menu {
+  background: transparent;
+}
+
+.side-menu-modern .el-sub-menu .el-menu-item {
+  color: #d1d5db;
+}
+
+.side-menu-modern .el-menu-item.is-disabled {
+  opacity: 1;
+  color: #6b7280;
+}
+
+/* 對話框（加入播放清單） */
+.el-overlay {
+  background-color: rgba(2, 6, 23, 0.75);
+}
+
+.el-dialog.modern-dialog {
+  background: rgba(15, 23, 42, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.5rem;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+  max-width: calc(100vw - 2rem);
+  padding: 0;
+  overflow: hidden;
+}
+
+.modern-dialog .el-dialog__header {
+  padding: 1.5rem 2rem 0;
+}
+
+.modern-dialog .el-dialog__title {
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+}
+
+.modern-dialog .el-dialog__body {
+  padding: 1.25rem 2rem 1rem;
+  color: #e5e7eb;
+}
+
+.modern-dialog .el-dialog__footer {
+  padding: 0 2rem 1.25rem;
+}
+
+/* 提示訊息（ElMessage） */
+.el-message {
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.875rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+.el-message .el-message__content {
+  color: #f3f4f6;
+  font-weight: 600;
+}
+
 /* Tailwind Utilities */
 @layer utilities {
   .text-glow {

@@ -489,13 +489,13 @@
                     <el-dropdown-item command="update">
                       <div class="flex flex-col py-1">
                         <span class="text-sm font-semibold">更新歌曲</span>
-                        <span class="text-[11px] text-gray-500">只抓上次之後新增的歌曲</span>
+                        <span class="text-[11px] text-gray-400">只抓上次之後新增的歌曲</span>
                       </div>
                     </el-dropdown-item>
                     <el-dropdown-item command="full">
                       <div class="flex flex-col py-1">
                         <span class="text-sm font-semibold">完整載入</span>
-                        <span class="text-[11px] text-gray-500">全部歌曲重新抓取（含刪除、排序變更）</span>
+                        <span class="text-[11px] text-gray-400">全部歌曲重新抓取（含刪除、排序變更）</span>
                       </div>
                     </el-dropdown-item>
                   </el-dropdown-menu>
