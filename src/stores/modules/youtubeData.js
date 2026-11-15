@@ -480,11 +480,11 @@ export const useYoutubeDataStore = defineStore('data', () => {
         const newItem = {
           id: res.data.id,
           snippet: {
-            position: snippetData.value.length,
+            position: 0,
             title: res.data.snippet.title,
             thumbnails: {
               medium: {
-                url: res.data.snippet.thumbnails.medium.url
+                url: res.data.snippet.thumbnails?.medium?.url || res.data.snippet.thumbnails?.default?.url || ''
               }
             },
             resourceId: {
@@ -492,7 +492,14 @@ export const useYoutubeDataStore = defineStore('data', () => {
             }
           }
         }
-        snippetData.value.push(newItem)
+        // YouTube 會依清單的設定把新歌放在最上面或最後面，本機清單要放在同一邊
+        const addedAtTop = res.data.snippet.position === 0 && snippetData.value.length > 0
+        snippetData.value = addedAtTop
+          ? [newItem, ...snippetData.value]
+          : [...snippetData.value, newItem]
+        snippetData.value.forEach((video, index) => {
+          video.snippet.position = index
+        })
         markSynced('update', [newItem])
         saveCurrentCache()
       }
