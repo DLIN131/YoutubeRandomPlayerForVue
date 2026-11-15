@@ -6,6 +6,7 @@ import {
   deleteListItem,
   fetchMyPlaylists,
   searchYoutube,
+  fetchPopularMusic,
   insertListItem,
   checkVideoInPlaylist
 } from '../../api/fetchYoutubeData'
@@ -93,6 +94,9 @@ export const useYoutubeDataStore = defineStore('data', () => {
   const currentListName = ref('')
   const myPlaylistData = ref([])
   const recommendedVideos = ref([])
+  // YouTube 搜尋分頁：搜尋結果，以及沒有搜尋時顯示的日本熱門音樂
+  const searchResults = ref([])
+  const popularVideos = ref([])
   // 清單最後一頁的 pageToken，「更新歌曲」從這裡接著讀
   const resumeToken = ref(null)
   // true：正在「更新歌曲」（只檢查新歌）；false：完整載入
@@ -406,6 +410,56 @@ export const useYoutubeDataStore = defineStore('data', () => {
     }
   }
 
+  // search API 回傳的標題是 HTML 跳脫過的（&quot;、&amp;…），轉回一般文字
+  const decodeHtml = (text = '') => {
+    const el = document.createElement('textarea')
+    el.innerHTML = text
+    return el.value
+  }
+
+  // 搜尋或熱門影片轉成清單用的格式
+  const toSearchItem = (videoId, snippet) => ({
+    id: videoId,
+    channelTitle: decodeHtml(snippet.channelTitle),
+    snippet: {
+      title: decodeHtml(snippet.title),
+      thumbnails: {
+        medium: {
+          url: snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || ''
+        }
+      },
+      resourceId: {
+        videoId
+      }
+    }
+  })
+
+  // YouTube 搜尋（每次 100 quota）。成功回傳 true
+  const searchVideos = async (query) => {
+    try {
+      const res = await searchYoutube(query, 25)
+      searchResults.value = res.data.items.map((item) => toSearchItem(item.id.videoId, item.snippet))
+      return true
+    } catch (error) {
+      console.error('Search youtube failed', error)
+      searchResults.value = []
+      return false
+    }
+  }
+
+  // 日本地區的熱門音樂（動畫歌、J-POP 為主）。成功回傳 true
+  const getPopularMusic = async () => {
+    try {
+      const res = await fetchPopularMusic('JP')
+      popularVideos.value = res.data.items.map((item) => toSearchItem(item.id, item.snippet))
+      return true
+    } catch (error) {
+      console.error('Fetch popular music failed', error)
+      popularVideos.value = []
+      return false
+    }
+  }
+
   const addVideoToPlaylist = async (item, targetId) => {
     const playlistId = targetId || currentPlaylistId.value
     if (!playlistId) {
@@ -477,6 +531,10 @@ export const useYoutubeDataStore = defineStore('data', () => {
     deleteItem,
     recommendedVideos,
     getRecommendations,
+    searchResults,
+    popularVideos,
+    searchVideos,
+    getPopularMusic,
     currentPlaylistId,
     addVideoToPlaylist
   }

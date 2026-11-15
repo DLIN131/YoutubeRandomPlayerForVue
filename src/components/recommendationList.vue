@@ -61,7 +61,7 @@
           </div>
 
           <button
-            @click.stop="handleAdd(item)"
+            @click.stop="addDialog.open(item)"
             class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-white/5 text-gray-400 hover:bg-indigo-500 hover:text-white transition-all opacity-0 group-hover:opacity-100"
             :title="`Add ${item.snippet.title} to playlist`"
           >
@@ -72,73 +72,17 @@
       </template>
     </virtualList>
 
-    <!-- Playlist Selection Dialog -->
-    <el-dialog
-      v-model="isPlaylistDialogVisible"
-      title="Select Playlist"
-      width="400px"
-      class="modern-dialog"
-      append-to-body
-      :show-close="false"
-    >
-      <div class="flex flex-col gap-3 py-2">
-        <p class="text-xs text-gray-400 mb-2 uppercase tracking-widest font-bold">Your YouTube Playlists</p>
-
-        <el-scrollbar max-height="300px">
-          <div class="flex flex-col gap-2 pr-2">
-            <div
-              v-for="list in myPlaylistData"
-              :key="list.value"
-              @click="handleConfirmAdd(list.value)"
-              class="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-indigo-500/10 hover:border-indigo-500/30 cursor-pointer transition-all flex items-center justify-between group"
-            >
-              <!-- Text color updated to text-gray-400 for better depth -->
-              <span class="text-sm font-medium text-gray-400 group-hover:text-white truncate pr-4">{{ list.name }}</span>
-              <el-icon class="text-gray-500 group-hover:text-indigo-400"><ArrowRight /></el-icon>
-            </div>
-          </div>
-        </el-scrollbar>
-
-        <div v-if="myPlaylistData.length === 0" class="py-10 flex flex-col items-center justify-center text-gray-500 gap-3">
-          <el-icon class="text-4xl opacity-20"><List /></el-icon>
-          <p class="text-xs">No playlists found</p>
-          <button @click="fetchMyPlaylists" class="text-indigo-400 text-xs hover:underline">Refresh</button>
-        </div>
-      </div>
-
-      <template #footer>
-        <div class="flex justify-end p-2">
-          <button @click="isPlaylistDialogVisible = false" class="text-sm text-gray-500 hover:text-white transition-colors">Cancel</button>
-        </div>
-      </template>
-    </el-dialog>
-
-    <!-- Custom Minimalist Toast -->
-    <teleport to="body">
-      <transition name="toast-fade">
-        <div v-if="toast.show" class="fixed inset-0 flex items-center justify-center z-[9999] pointer-events-none">
-          <div class="px-6 py-3 rounded-2xl bg-black/90 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center gap-3 animate-in fade-in zoom-in-95 duration-300 pointer-events-auto">
-            <el-icon :class="toast.type === 'success' ? 'text-green-400' : 'text-amber-400'" size="20">
-              <CircleCheck v-if="toast.type === 'success'" />
-              <Warning v-else />
-            </el-icon>
-            <span class="text-sm font-bold text-white tracking-wide">{{ toast.message }}</span>
-          </div>
-        </div>
-      </transition>
-    </teleport>
+    <addToPlaylistDialog ref="addDialog" />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useYoutubeDataStore, useUserStore } from '../stores'
+import { ref } from 'vue'
+import { useYoutubeDataStore } from '../stores'
 import { storeToRefs } from 'pinia'
 import virtualList from './virtualList.vue'
-import {
-  Refresh, VideoPlay, Compass, Plus, ArrowRight,
-  List, CircleCheck, Warning
-} from '@element-plus/icons-vue'
+import addToPlaylistDialog from './addToPlaylistDialog.vue'
+import { Refresh, VideoPlay, Compass, Plus } from '@element-plus/icons-vue'
 
 const props = defineProps({
   currentTitle: {
@@ -150,26 +94,9 @@ const props = defineProps({
 defineEmits(['loadVideo'])
 
 const youtubeStore = useYoutubeDataStore()
-const userStore = useUserStore()
-const { recommendedVideos, myPlaylistData } = storeToRefs(youtubeStore)
+const { recommendedVideos } = storeToRefs(youtubeStore)
 const loading = ref(false)
-const isPlaylistDialogVisible = ref(false)
-const selectedVideo = ref(null)
-
-const toast = reactive({
-  show: false,
-  message: '',
-  type: 'success'
-})
-
-const showToast = (message, type = 'success') => {
-  toast.message = message
-  toast.type = type
-  toast.show = true
-  setTimeout(() => {
-    toast.show = false
-  }, 2000)
-}
+const addDialog = ref(null)
 
 const getRecommendationKey = (item, index) => item?.id?.videoId ?? item?.etag ?? `${item?.snippet?.title ?? 'recommended'}-${index}`
 
@@ -182,34 +109,6 @@ const handleRefresh = async () => {
     loading.value = false
   }
 }
-
-const fetchMyPlaylists = async () => {
-  if (!userStore.oauthToken) return
-  await youtubeStore.getMyPlaylistData(userStore.oauthToken)
-}
-
-const handleAdd = async (item) => {
-  if (!userStore.oauthToken) {
-    alert('請先點擊左側「Connect Account」登入 YouTube 帳號')
-    return
-  }
-
-  selectedVideo.value = item
-  if (myPlaylistData.value.length === 0) {
-    await fetchMyPlaylists()
-  }
-  isPlaylistDialogVisible.value = true
-}
-
-const handleConfirmAdd = async (playlistId) => {
-  const result = await youtubeStore.addVideoToPlaylist(selectedVideo.value, playlistId)
-  if (result === 'exists') {
-    showToast('影片已存在', 'warning')
-  } else if (result) {
-    showToast('加入成功', 'success')
-    isPlaylistDialogVisible.value = false
-  }
-}
 </script>
 
 <style scoped>
@@ -220,38 +119,6 @@ const handleConfirmAdd = async (playlistId) => {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-}
-
-.toast-fade-enter-active, .toast-fade-leave-active {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.toast-fade-enter-from {
-  opacity: 0;
-  transform: translateY(20px) scale(0.9);
-}
-.toast-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-20px) scale(0.9);
-}
-
-:deep(.modern-dialog) {
-  @apply !bg-[#0f172a]/95 !backdrop-blur-2xl !border-white/10 !rounded-[2rem] overflow-hidden;
-}
-
-:deep(.modern-dialog .el-dialog__header) {
-  @apply !pt-6 !px-8 !pb-0;
-}
-
-:deep(.modern-dialog .el-dialog__title) {
-  @apply !text-white !font-black !text-xl !tracking-tight;
-}
-
-:deep(.modern-dialog .el-dialog__body) {
-  @apply !pt-6 !px-8 !pb-8;
-}
-
-:deep(.modern-dialog .el-dialog__footer) {
-  @apply !px-8 !pb-6 !border-none;
 }
 
 .virtual-list {

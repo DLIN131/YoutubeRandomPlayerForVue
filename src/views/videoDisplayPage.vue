@@ -3,8 +3,17 @@
     <!-- Player Section -->
     <div class="flex flex-col md:w-8/12 items-center flex-1">
       <div class="player-container w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-black" ref="playerContainerRef" :style="{ opacity: playerOpacity }">
+        <audioPlayer
+          v-if="isPrepare && audioTrack"
+          :src="audioTrack.streamUrl"
+          :cover="audioTrack.cover"
+          :title="title"
+          :initial-volume="lastVolume"
+          ref="playerRef"
+          @changeState="getPlayerState"
+        />
         <youtubePlayer
-          v-if="isPrepare"
+          v-else-if="isPrepare"
           :width="'100%'"
           :height="'100%'"
           :vid="videoId"
@@ -118,7 +127,7 @@
     >
       <div class="p-4 h-full flex flex-col">
         <div class="flex items-center justify-between mb-4 px-2 shrink-0">
-          <div class="flex items-center gap-4">
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 min-w-0">
             <button
               @click="activeTab = 'queue'"
               :class="[
@@ -140,6 +149,24 @@
               ]"
             >
               Discovery
+            </button>
+            <button
+              @click="openGenres"
+              :class="[
+                'text-xs font-bold uppercase tracking-widest pb-2 border-b-2 transition-all',
+                activeTab === 'genres' ? 'text-indigo-400 border-indigo-400' : 'text-gray-500 border-transparent hover:text-gray-300'
+              ]"
+            >
+              Genres
+            </button>
+            <button
+              @click="openSearch"
+              :class="[
+                'text-xs font-bold uppercase tracking-widest pb-2 border-b-2 transition-all',
+                activeTab === 'search' ? 'text-indigo-400 border-indigo-400' : 'text-gray-500 border-transparent hover:text-gray-300'
+              ]"
+            >
+              Search
             </button>
           </div>
 
@@ -225,9 +252,25 @@
           </virtualList>
         </template>
 
-        <template v-else>
+        <template v-else-if="activeTab === 'discovery'">
           <recommendationList :currentTitle="title" @loadVideo="loadVideo" />
         </template>
+
+        <!-- 第一次打開才載入，之後切換分頁保留搜尋結果 -->
+        <genreExplore
+          v-if="genresVisited"
+          v-show="activeTab === 'genres'"
+          :playing-id="audioTrack?.id ?? ''"
+          @playTracks="playExploreTracks"
+        />
+
+        <youtubeSearch
+          v-if="searchVisited"
+          v-show="activeTab === 'search'"
+          :query="searchQuery"
+          :playing-video-id="audioTrack ? '' : videoId"
+          @loadVideo="loadVideo"
+        />
       </div>
     </div>
 
@@ -262,12 +305,16 @@
 import { useYoutubeDataStore, usePlaylistStore, useUserStore } from '../stores'
 import { ref, onBeforeUnmount, onMounted, watch } from 'vue'
 import youtubePlayer from '../components/youtubePlayer.vue'
+import audioPlayer from '../components/audioPlayer.vue'
+import genreExplore from '../components/genreExplore.vue'
+import youtubeSearch from '../components/youtubeSearch.vue'
+import { useRoute } from 'vue-router'
 import searchCard from '../components/searchCard.vue'
 import titleCard from '../components/titleCard.vue'
 import recommendationList from '../components/recommendationList.vue'
 import virtualList from '../components/virtualList.vue'
 import { downloadData } from '../api/downloadData'
-import { googleTokenLogin } from 'vue3-google-login'
+import { requestYoutubeToken } from '../utils/youtubeAuth'
 import {
   ArrowLeftBold,
   ArrowRightBold,
@@ -278,7 +325,6 @@ import {
   Close,
   Loading
 } from '@element-plus/icons-vue'
-import { GOOGLE_CLIENT_ID } from '../config/env'
 
 const useYoutubeData = useYoutubeDataStore()
 const usePlaylist = usePlaylistStore()
@@ -312,10 +358,52 @@ const isShuffled = ref(false)
 // 目前清單（snippetData）是哪個 YouTube 播放清單；伺服器存的清單為空字串
 const queuePlaylistId = ref('')
 
+// 正在播放的非 YouTube 歌曲（Genres 分頁的 Audius 歌曲）；播 YouTube 影片時為 null
+const audioTrack = ref(null)
+// 從 Genres 分頁開始播放時的清單，上一首／下一首在這個清單裡移動
+const exploreQueue = ref([])
+const exploreIndex = ref(-1)
+const genresVisited = ref(false)
+// 最近一次的音量，換播放器時沿用
+const lastVolume = ref(100)
+
+// 網址上的 ?q=（從動畫 OP/ED 頁點歌曲過來）會直接打開搜尋分頁並搜尋
+const route = useRoute()
+const searchVisited = ref(false)
+const searchQuery = ref('')
+
+const openSearch = () => {
+  searchVisited.value = true
+  activeTab.value = 'search'
+}
+
+const openSearchFromRoute = () => {
+  const text = typeof route.query.q === 'string' ? route.query.q.trim() : ''
+  if (!text) return
+  searchQuery.value = text
+  openSearch()
+  // 手機版清單是側邊抽屜，要一起打開才看得到結果
+  isMobilePlaylistOpen.value = true
+}
+
+const openGenres = () => {
+  genresVisited.value = true
+  activeTab.value = 'genres'
+}
+
+const playExploreTracks = (tracks, index) => {
+  exploreQueue.value = tracks
+  exploreIndex.value = index
+  loadVideo(tracks[index], -1)
+}
+
 const loadVideo = async (item, index) => {
   if (!item) return
+  const isAudio = item.source === 'audius'
+  if (!isAudio) exploreQueue.value = []
+  audioTrack.value = isAudio ? item : null
   id.value = index
-  title.value = item.snippet.title
+  title.value = isAudio && item.artist ? `${item.snippet.title} — ${item.artist}` : item.snippet.title
   isPrepare.value = true
   videoId.value = item.snippet.resourceId.videoId
 
@@ -352,12 +440,21 @@ const showSearching = (state) => {
   }
 }
 
+// 在 Genres 的清單裡往前或往後一首，到底就繞回另一端
+const stepExplore = (step) => {
+  const length = exploreQueue.value.length
+  exploreIndex.value = (exploreIndex.value + step + length) % length
+  loadVideo(exploreQueue.value[exploreIndex.value], -1)
+}
+
 const changeToNext = () => {
+  if (audioTrack.value && exploreQueue.value.length > 0) return stepExplore(1)
   const nextIdx = next.value.nextIndex > snippetData.value.length - 1 ? 0 : next.value.nextIndex
   loadVideo(snippetData.value[nextIdx], nextIdx)
 }
 
 const changeToPrev = () => {
+  if (audioTrack.value && exploreQueue.value.length > 0) return stepExplore(-1)
   const prevIdx = next.value.prevIndex < 0 ? snippetData.value.length - 1 : next.value.prevIndex
   loadVideo(snippetData.value[prevIdx], prevIdx)
 }
@@ -365,6 +462,7 @@ const changeToPrev = () => {
 const getPlayerState = (state) => {
   playerState.value = state.data
   volumeRange.value = state.target.getVolume()
+  lastVolume.value = volumeRange.value
   clearTimeout(timeOut)
   if (state.data === 0) {
     changeToNext()
@@ -405,6 +503,7 @@ const setVolume = async (volume) => {
 }
 
 const handleVolumeChange = () => {
+  lastVolume.value = Number(volumeRange.value)
   playerRef.value.setVolume(volumeRange.value)
 }
 
@@ -449,13 +548,9 @@ const download = async (item, index) => {
 const ensureOauthToken = async () => {
   if (userStore.oauthToken) return true
   try {
-    const res = await googleTokenLogin({
-      clientId: GOOGLE_CLIENT_ID,
-      scope: 'profile email https://www.googleapis.com/auth/youtube.force-ssl',
-      prompt: 'consent'
-    })
-    userStore.setOauthToken(res.access_token)
-    await userStore.getUserInfo(res.access_token)
+    const token = await requestYoutubeToken()
+    userStore.setOauthToken(token)
+    await userStore.getUserInfo(token)
     return true
   } catch (error) {
     console.log('google oauth login failed', error)
@@ -575,8 +670,11 @@ const handleSync = ({ playlistId, mode, added }) => {
   relinkPlaying(playingItemId)
 }
 
+watch(() => route.query.q, openSearchFromRoute)
+
 onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeyDown)
+  openSearchFromRoute()
   if (useYoutubeData.snippetData.length > 0) {
     resumeLatest()
   } else {

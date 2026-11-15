@@ -61,14 +61,28 @@ export const fetchMyPlaylists = (oauthToken, pageToken = '') => {
     }
   })
 }
-export const searchYoutube = (q) => {
+export const searchYoutube = (q, maxResults = 15) => {
   return request.get('/search', {
     params: {
       part: 'snippet',
       q,
       type: 'video',
       videoCategoryId: '10', // Music
-      maxResults: 15,
+      maxResults,
+      key: API_KEY
+    }
+  })
+}
+
+// 某個地區的熱門音樂影片（只花 1 quota，搜尋要 100）
+export const fetchPopularMusic = (regionCode = 'JP') => {
+  return request.get('/videos', {
+    params: {
+      part: 'snippet',
+      chart: 'mostPopular',
+      videoCategoryId: '10', // Music
+      regionCode,
+      maxResults: 50,
       key: API_KEY
     }
   })

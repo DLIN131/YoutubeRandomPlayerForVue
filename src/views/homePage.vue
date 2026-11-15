@@ -117,6 +117,22 @@
               <span class="text-[10px] text-gray-400">Download MP3 tracks</span>
             </div>
           </router-link>
+          <router-link
+            to="/anime"
+            @click="isMobileMenuOpen = false"
+            :class="[
+              'col-span-2 p-4 rounded-2xl border flex items-center gap-3 transition-all duration-200 active:scale-95',
+              $route.path === '/anime'
+                ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300 shadow-xl shadow-indigo-500/10'
+                : 'bg-white/5 border-white/5 text-gray-300 hover:bg-white/10 hover:border-white/10'
+            ]"
+          >
+            <el-icon size="24"><Headset /></el-icon>
+            <div>
+              <span class="font-bold text-sm block">Anime OP / ED</span>
+              <span class="text-[10px] text-gray-400">Browse themes by year & season</span>
+            </div>
+          </router-link>
         </div>
 
         <!-- Scrollable Lists Container -->
@@ -298,6 +314,10 @@
               <el-menu-item index="/downLoad" class="menu-item-modern">
                 <el-icon><Download /></el-icon>
                 <span>Download</span>
+              </el-menu-item>
+              <el-menu-item index="/anime" class="menu-item-modern">
+                <el-icon><Headset /></el-icon>
+                <span>Anime OP / ED</span>
               </el-menu-item>
 
               <div class="menu-divider"></div>
@@ -553,13 +573,12 @@ import { ref, computed, onMounted } from 'vue'
 import {
   House, Download, Expand, Fold, List, CaretBottom,
   Loading, Close, VideoPlay, Connection,
-  Refresh, SwitchButton, Upload, Clock
+  Refresh, SwitchButton, Upload, Clock, Headset
 } from '@element-plus/icons-vue'
 import { useYoutubeDataStore, useUserStore, usePlaylistStore } from '../stores'
-import { googleTokenLogin } from 'vue3-google-login'
+import { requestYoutubeToken } from '../utils/youtubeAuth'
 import { ElMessage } from 'element-plus'
 import 'element-plus/es/components/message/style/css'
-import { GOOGLE_CLIENT_ID } from '../config/env'
 
 const isLoading = ref(false)
 const isfetch = ref(false)
@@ -685,13 +704,10 @@ const fetchMyYoutubePlaylists = async () => {
 
 const handleGoogleYoutubeLogin = async () => {
   try {
-    const res = await googleTokenLogin({
-      clientId: GOOGLE_CLIENT_ID,
-      scope: 'profile email https://www.googleapis.com/auth/youtube.readonly',
-      prompt: 'consent'
-    })
-    userStore.setOauthToken(res.access_token)
-    await userStore.getUserInfo(res.access_token)
+    // 一次要到讀寫權限，之後加入、刪除清單裡的歌不用再授權一次
+    const token = await requestYoutubeToken()
+    userStore.setOauthToken(token)
+    await userStore.getUserInfo(token)
     await fetchMyYoutubePlaylists()
   } catch (error) {
     console.log('google oauth for youtube playlists failed', error)
