@@ -20,7 +20,6 @@
       </button>
       <button
         @click="search"
-        :disabled="loading"
         class="absolute right-3 top-1 bottom-1 w-9 flex items-center justify-center rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white transition-all"
         title="Search"
       >
@@ -36,7 +35,7 @@
     <virtualList
       class="flex-1"
       container-class="virtual-list flex-1 -mx-2 px-2"
-      max-height="calc(100vh - 230px)"
+      :max-height="maxHeight"
       :items="results"
       :item-height="96"
       :item-key="(item) => item.id"
@@ -111,7 +110,9 @@ const props = defineProps({
   // 從其他頁面帶進來的搜尋關鍵字（例如動畫 OP/ED 頁）
   query: { type: String, default: '' },
   // 正在播放的影片 id，用來標示清單中的項目
-  playingVideoId: { type: String, default: '' }
+  playingVideoId: { type: String, default: '' },
+  // 結果清單的最大高度；傳空字串表示由外層容器決定高度
+  maxHeight: { type: String, default: 'calc(100vh - 230px)' }
 })
 
 defineEmits(['loadVideo'])
@@ -128,10 +129,14 @@ const errorMessage = ref('')
 
 const results = computed(() => (searchedQuery.value ? searchResults.value : popularVideos.value))
 
+// 連續搜尋時只有最後一次會更新畫面狀態
+let runId = 0
 const run = async (action) => {
+  const current = ++runId
   loading.value = true
   errorMessage.value = ''
   const ok = await action()
+  if (current !== runId) return
   if (!ok) errorMessage.value = 'YouTube 載入失敗'
   loading.value = false
 }
@@ -139,7 +144,6 @@ const run = async (action) => {
 const search = async () => {
   const text = keyword.value.trim()
   if (!text) return clearSearch()
-  if (loading.value) return
   searchedQuery.value = text
   searchResults.value = []
   await run(() => youtubeStore.searchVideos(text))
@@ -148,7 +152,14 @@ const search = async () => {
 const clearSearch = async () => {
   keyword.value = ''
   searchedQuery.value = ''
-  if (popularVideos.value.length === 0) await run(() => youtubeStore.getPopularMusic())
+  if (popularVideos.value.length === 0) {
+    await run(() => youtubeStore.getPopularMusic())
+  } else {
+    // 取消還在進行中的搜尋
+    runId++
+    loading.value = false
+    errorMessage.value = ''
+  }
 }
 
 const applyQuery = (text) => {
@@ -163,6 +174,9 @@ watch(() => props.query, (text) => {
 onMounted(() => {
   props.query ? applyQuery(props.query) : clearSearch()
 })
+
+// 讓外層直接指定關鍵字搜尋（同一個關鍵字也會重新搜尋）
+defineExpose({ searchFor: applyQuery })
 </script>
 
 <style scoped>

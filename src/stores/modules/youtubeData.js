@@ -435,14 +435,18 @@ export const useYoutubeDataStore = defineStore('data', () => {
   })
 
   // YouTube 搜尋（每次 100 quota）。成功回傳 true
+  // 連續搜尋時，較早送出的搜尋晚回來也不會蓋掉最新的結果
+  let searchId = 0
   const searchVideos = async (query) => {
+    const current = ++searchId
     try {
       const res = await searchYoutube(query, 25)
+      if (current !== searchId) return true
       searchResults.value = res.data.items.map((item) => toSearchItem(item.id.videoId, item.snippet))
       return true
     } catch (error) {
       console.error('Search youtube failed', error)
-      searchResults.value = []
+      if (current === searchId) searchResults.value = []
       return false
     }
   }
