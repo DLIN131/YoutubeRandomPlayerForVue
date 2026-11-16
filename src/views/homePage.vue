@@ -133,6 +133,22 @@
               <span class="text-[10px] text-gray-400">Browse themes by year & season</span>
             </div>
           </router-link>
+          <router-link
+            to="/vtuber"
+            @click="isMobileMenuOpen = false"
+            :class="[
+              'col-span-2 p-4 rounded-2xl border flex items-center gap-3 transition-all duration-200 active:scale-95',
+              $route.path === '/vtuber'
+                ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300 shadow-xl shadow-indigo-500/10'
+                : 'bg-white/5 border-white/5 text-gray-300 hover:bg-white/10 hover:border-white/10'
+            ]"
+          >
+            <el-icon size="24"><Microphone /></el-icon>
+            <div>
+              <span class="font-bold text-sm block">VTuber Songs</span>
+              <span class="text-[10px] text-gray-400">hololive, 彩虹社, VSPO! & 個人勢</span>
+            </div>
+          </router-link>
         </div>
 
         <!-- Scrollable Lists Container -->
@@ -318,6 +334,10 @@
               <el-menu-item index="/anime" class="menu-item-modern">
                 <el-icon><Headset /></el-icon>
                 <span>Anime OP / ED</span>
+              </el-menu-item>
+              <el-menu-item index="/vtuber" class="menu-item-modern">
+                <el-icon><Microphone /></el-icon>
+                <span>VTuber Songs</span>
               </el-menu-item>
 
               <div class="menu-divider"></div>
@@ -573,7 +593,7 @@ import { ref, computed, onMounted } from 'vue'
 import {
   House, Download, Expand, Fold, List, CaretBottom,
   Loading, Close, VideoPlay, Connection,
-  Refresh, SwitchButton, Upload, Clock, Headset
+  Refresh, SwitchButton, Upload, Clock, Headset, Microphone
 } from '@element-plus/icons-vue'
 import { useYoutubeDataStore, useUserStore, usePlaylistStore } from '../stores'
 import { requestYoutubeToken } from '../utils/youtubeAuth'

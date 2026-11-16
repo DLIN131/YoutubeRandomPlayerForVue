@@ -20,6 +20,10 @@ const router = createRouter({
           component: () => import('../views/animeThemesPage.vue')
         }, // anime OP/ED page
         {
+          path: 'vtuber',
+          component: () => import('../views/vtuberSongsPage.vue')
+        }, // VTuber songs page
+        {
           path: 'player',
           component: videoDisplayPage
         }

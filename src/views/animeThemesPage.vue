@@ -172,9 +172,6 @@
 
 <script>
 // 寫在模組層級：切到別頁再回來時保留已載入的季度和上次選的年份、季度，不用重抓
-const cache = new Map()
-const lastSelection = { year: null, season: null }
-let cachedYears = null
 </script>
 
 <script setup>
@@ -184,6 +181,9 @@ import { Search, Loading, ArrowDown, VideoPlay } from '@element-plus/icons-vue'
 import { fetchAnimeYears, fetchSeasonAnime } from '../api/animeThemes'
 import youtubePlayer from '../components/youtubePlayer.vue'
 import youtubeSearch from '../components/youtubeSearch.vue'
+const cache = new Map()
+const lastSelection = { year: null, season: null }
+let cachedYears = null
 
 // youtubePlayer 用 id 組出播放器元素的 id，取一個不會和播放頁重複的值
 const PLAYER_ID = -2
