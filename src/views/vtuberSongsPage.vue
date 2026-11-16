@@ -187,8 +187,6 @@
 <script>
 // 寫在模組層級：切到別頁再回來時保留已載入的歌曲與上次的篩選
 // key 是「組織|主題」，值是 { items, offset, done }
-const streamCache = new Map()
-const lastSelection = { org: '', topic: '' }
 </script>
 
 <script setup>
@@ -199,6 +197,8 @@ import virtualList from '../components/virtualList.vue'
 import youtubePlayer from '../components/youtubePlayer.vue'
 import addToPlaylistDialog from '../components/addToPlaylistDialog.vue'
 import { fetchHolodexVideos, getHolodexKey, setHolodexKey } from '../api/holodex'
+const streamCache = new Map()
+const lastSelection = { org: '', topic: '' }
 
 // youtubePlayer 用 id 組出播放器元素的 id，取一個不會和其他頁重複的值
 const PLAYER_ID = -3
@@ -258,7 +258,8 @@ const toSong = (video, stream) => {
     time,
     dateLabel: time ? new Date(time).toLocaleDateString('sv-SE') : '',
     topic: stream.topic,
-    orgLabel: orgLabel(stream.org),
+    // 用組織篩選時也會包含合作影片，所以標籤以頻道自己所屬的組織為準
+    orgLabel: orgLabel(video.channel?.org || stream.org),
     channelName: video.channel?.name ?? '',
     snippet: {
       title: video.title,
