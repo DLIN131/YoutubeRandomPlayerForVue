@@ -29,7 +29,7 @@
       ref="audioRef"
       :src="src"
       autoplay
-      @playing="emitState(1)"
+      @playing="onPlaying"
       @pause="onPause"
       @waiting="emitState(3)"
       @ended="emitState(0)"
@@ -43,7 +43,8 @@
 <script setup>
 // 播放一般音檔（Audius 等非 YouTube 來源）。
 // 對外的方法與 changeState 事件和 youtubePlayer 相同，播放頁可以用同一套控制。
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { claimPlayback, releasePlayback } from '../utils/playbackFocus'
 
 const props = defineProps({
   src: { type: String, required: true },
@@ -86,7 +87,13 @@ const setVolume = (volume) => {
   if (audioRef.value) audioRef.value.volume = Math.min(1, Math.max(0, volume / 100))
 }
 
+const onPlaying = () => {
+  claimPlayback(pause)
+  emitState(1)
+}
+
 onMounted(() => setVolume(props.initialVolume))
+onBeforeUnmount(() => releasePlayback(pause))
 
 defineExpose({ play, pause, seekTo, getCurrentTime, getVolume, setVolume })
 </script>

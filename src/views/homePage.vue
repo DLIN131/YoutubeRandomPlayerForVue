@@ -563,7 +563,8 @@
         <transition name="fade">
           <div
             v-if="useYoutubeData.isFetching"
-            class="fixed bottom-6 right-6 z-50 px-4 py-2.5 rounded-2xl bg-[#0f172a]/95 backdrop-blur-xl border border-indigo-500/30 shadow-[0_10px_30px_rgba(0,0,0,0.6)] flex items-center gap-3 pointer-events-none"
+            :class="['fixed right-6 z-50 px-4 py-2.5 rounded-2xl', hasMiniPlayer ? 'bottom-24' : 'bottom-6']"
+            class="bg-[#0f172a]/95 backdrop-blur-xl border border-indigo-500/30 shadow-[0_10px_30px_rgba(0,0,0,0.6)] flex items-center gap-3 pointer-events-none"
           >
             <el-icon class="is-loading text-indigo-400 text-lg"><Loading /></el-icon>
             <div class="flex items-center gap-2">
@@ -576,10 +577,16 @@
         </transition>
 
         <!-- Main View Outlet -->
-        <main class="flex-1 relative bg-[#020617] p-0 overflow-hidden">
+        <main :class="['flex-1 relative bg-[#020617] p-0 overflow-hidden transition-[padding] duration-200', hasMiniPlayer ? 'pb-20' : '']">
+          <!-- 播放頁一直掛著、只在其他頁時隱藏，切換頁面音樂不會中斷 -->
+          <videoDisplayPage
+            v-show="isPlayerRoute"
+            :active="isPlayerRoute"
+            @miniPlayerChange="hasMiniPlayer = $event"
+          />
           <router-view v-slot="{ Component }">
             <transition name="fade" mode="out-in">
-              <component :is="Component" />
+              <component :is="Component" v-if="!isPlayerRoute" />
             </transition>
           </router-view>
         </main>
@@ -590,6 +597,8 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import videoDisplayPage from './videoDisplayPage.vue'
 import {
   House, Download, Expand, Fold, List, CaretBottom,
   Loading, Close, VideoPlay, Connection,
@@ -607,6 +616,9 @@ const listId = ref('')
 const notDisplaySideMenu = ref(false)
 const isMobileMenuOpen = ref(false)
 const listNames = computed(() => useYoutubeData.listNameData)
+const route = useRoute()
+const isPlayerRoute = computed(() => route.path === '/player')
+const hasMiniPlayer = ref(false)
 const userStore = useUserStore()
 const playlistStore = usePlaylistStore()
 const isUploading = ref(false)

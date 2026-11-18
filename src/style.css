@@ -86,6 +86,32 @@ input, button {
   font-family: inherit;
 }
 
+button:not(:disabled),
+[role='button'] {
+  cursor: pointer;
+}
+
+/* 鍵盤操作時看得到焦點；滑鼠點擊不出現外框 */
+:focus-visible {
+  outline: 2px solid #818cf8;
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 .side-menu-modern .el-sub-menu__title:hover,
 .side-menu-modern .el-menu-item:hover {
   background-color: rgba(255, 255, 255, 0.05) !important;

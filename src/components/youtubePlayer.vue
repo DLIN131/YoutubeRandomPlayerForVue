@@ -7,6 +7,7 @@
 <script setup>
 import { watch, onMounted, onBeforeUnmount } from 'vue'
 import YouTubePlayer from 'youtube-player'
+import { claimPlayback, releasePlayback } from '../utils/playbackFocus'
 
 const props = defineProps({
   id: { type: Number, default: 0 },
@@ -29,6 +30,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  releasePlayback(pause)
   player && player.destroy()
   removeStateChange()
 })
@@ -92,6 +94,7 @@ const setVolume = (volume) => player && player.setVolume(volume)
 let stateChangeListener
 const addStateChange = () => {
   stateChangeListener = player?.on('stateChange', (event) => {
+    if (event.data === 1) claimPlayback(pause)
     emit('changeState', event)
   })
 }

@@ -1,5 +1,4 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import videoDisplayPage from '../views/videoDisplayPage.vue'
 import homePage from '../views/homePage.vue'
 
 const router = createRouter({
@@ -24,8 +23,9 @@ const router = createRouter({
           component: () => import('../views/vtuberSongsPage.vue')
         }, // VTuber songs page
         {
+          // 播放頁由 homePage 常駐顯示（切頁不中斷音樂），這裡只佔路徑
           path: 'player',
-          component: videoDisplayPage
+          component: { render: () => null }
         }
       ]
     }, // home page

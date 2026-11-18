@@ -87,13 +87,16 @@
                 : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
             ]"
           >
-            <div class="relative w-16 h-16 flex-shrink-0 self-center">
+            <div class="relative w-16 h-16 flex-shrink-0 self-center rounded-lg bg-white/5 flex items-center justify-center text-gray-600">
+              <!-- 沒有封面時顯示音符 -->
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
               <img
+                v-if="item.snippet.thumbnails.medium.url"
                 :src="item.snippet.thumbnails.medium.url"
                 :alt="`Cover: ${item.snippet.title}`"
                 loading="lazy"
                 decoding="async"
-                class="w-full h-full object-cover rounded-lg shadow-lg"
+                class="absolute inset-0 w-full h-full object-cover rounded-lg shadow-lg"
               >
               <div class="absolute inset-0 bg-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                 <el-icon class="text-white text-xl"><VideoPlay /></el-icon>
