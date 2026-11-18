@@ -1,5 +1,5 @@
 <template>
-  <div class="layout-container-modern h-screen w-screen overflow-hidden flex flex-col bg-[#020617] text-white select-none">
+  <div class="layout-container-modern h-screen w-screen overflow-hidden flex flex-col bg-[#020617] text-white">
     <!-- Full-Screen Mobile Menu Overlay (滿版過渡動畫選單) -->
     <transition name="full-menu">
       <div

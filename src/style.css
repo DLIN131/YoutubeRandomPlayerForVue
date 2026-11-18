@@ -91,6 +91,20 @@ button:not(:disabled),
   cursor: pointer;
 }
 
+/* 文字（歌名等）可以選取複製；按鈕、圖片、選單不要被選到 */
+button,
+img,
+.el-menu,
+.el-dropdown-menu {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+::selection {
+  background: rgba(99, 102, 241, 0.45);
+  color: #fff;
+}
+
 /* 鍵盤操作時看得到焦點；滑鼠點擊不出現外框 */
 :focus-visible {
   outline: 2px solid #818cf8;

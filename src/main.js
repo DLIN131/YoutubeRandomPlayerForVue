@@ -6,6 +6,9 @@ import App from './App.vue'
 import router from './router'
 import vue3GoogleLogin from 'vue3-google-login'
 import { GOOGLE_CLIENT_ID } from './config/env'
+import { installSelectGuard } from './utils/selectGuard'
+
+installSelectGuard()
 
 const app = createApp(App)
 app.use(router)

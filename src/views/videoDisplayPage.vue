@@ -68,7 +68,18 @@
             <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-300/90 tabular-nums">
               Now playing<span v-if="queuePositionLabel" class="text-gray-500"> · {{ queuePositionLabel }}</span>
             </p>
-            <h2 class="mt-1 text-lg sm:text-xl font-bold text-white leading-snug line-clamp-2" :title="title">{{ title }}</h2>
+            <div class="mt-1 flex items-start gap-2">
+              <h2 class="flex-1 min-w-0 text-lg sm:text-xl font-bold text-white leading-snug line-clamp-2 select-text" :title="title">{{ title }}</h2>
+              <button
+                class="copy-btn"
+                :class="{ 'is-copied': copied }"
+                :aria-label="copied ? 'Title copied' : 'Copy song title'"
+                :title="copied ? 'Copied' : 'Copy title'"
+                @click="copyTitle"
+              >
+                <uiIcon :name="copied ? 'check' : 'copy'" :size="16" />
+              </button>
+            </div>
           </div>
 
           <div class="flex flex-col items-center gap-4">
@@ -344,6 +355,8 @@ import virtualList from '../components/virtualList.vue'
 import { downloadData } from '../api/downloadData'
 import { requestYoutubeToken } from '../utils/youtubeAuth'
 import { Download, Close, Loading, Delete } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import 'element-plus/es/components/message/style/css'
 
 const props = defineProps({
   // 目前是不是在播放頁；在其他頁時播放頁只是隱藏，音樂繼續播
@@ -445,6 +458,40 @@ const nowPlayingCover = computed(() => audioTrack.value?.cover ||
   (videoId.value ? `https://i.ytimg.com/vi/${videoId.value}/mqdefault.jpg` : ''))
 
 const playFromStart = () => loadVideo(snippetData.value[0], 0)
+
+// 複製目前的歌名；Clipboard API 不能用或被拒絕時（非 https、嵌入的頁面）改用舊的 execCommand
+const copied = ref(false)
+let copiedTimer = null
+const copyWithExecCommand = (text) => {
+  const area = document.createElement('textarea')
+  area.value = text
+  area.setAttribute('readonly', '')
+  area.style.position = 'fixed'
+  area.style.opacity = '0'
+  document.body.appendChild(area)
+  area.select()
+  const ok = document.execCommand('copy')
+  document.body.removeChild(area)
+  if (!ok) throw new Error('execCommand copy failed')
+}
+const copyTitle = async () => {
+  const text = title.value
+  if (!text) return
+  try {
+    try {
+      await navigator.clipboard.writeText(text)
+    } catch {
+      copyWithExecCommand(text)
+    }
+    copied.value = true
+    clearTimeout(copiedTimer)
+    copiedTimer = setTimeout(() => { copied.value = false }, 1500)
+    ElMessage.success('已複製歌名')
+  } catch (error) {
+    console.log('copy title failed', error)
+    ElMessage.error('複製失敗，請直接選取歌名複製')
+  }
+}
 
 const showMiniPlayer = computed(() => !props.active && isPrepare.value)
 watch(showMiniPlayer, (visible) => emit('miniPlayerChange', visible), { immediate: true })
@@ -894,6 +941,18 @@ watch(
 
 .chip-btn:disabled {
   @apply opacity-40 cursor-not-allowed;
+}
+
+.copy-btn {
+  @apply w-9 h-9 shrink-0 rounded-lg flex items-center justify-center text-gray-400 bg-white/5 border border-white/10 transition-colors duration-150;
+}
+
+.copy-btn:hover {
+  @apply bg-white/10 text-white;
+}
+
+.copy-btn.is-copied {
+  @apply text-emerald-300 border-emerald-400/30 bg-emerald-500/10;
 }
 
 .slider-row {
